@@ -69,6 +69,17 @@ export type Materiality = "critical" | "high" | "medium" | "low";
 export type Verifiability = "direct" | "indirect" | "needs_primary_docs" | "unverifiable";
 export type ClaimType = "fact" | "metric" | "projection" | "comparison" | "credential" | "intent" | "opinion";
 
+export interface ReviewerClaimOverride {
+  override_id: string;
+  claim_id: string;
+  previous_status: ClaimStatus;
+  new_status: ClaimStatus;
+  previous_confidence: ConfidenceLevel;
+  new_confidence: ConfidenceLevel;
+  note: string;
+  updated_at: string;
+}
+
 export interface SourceReference {
   source_type: SourceType;
   label: string;
@@ -129,6 +140,7 @@ export interface Claim {
   contradicting_evidence_ids: string[];
   missing_evidence: string[];
   reviewer_notes: string[];
+  reviewer_overrides?: ReviewerClaimOverride[];
 }
 
 export interface Evidence {
@@ -235,6 +247,14 @@ export function assertReviewResult(value: ReviewResult): ReviewResult {
   for (const claim of value.claims) {
     if (!claimStatuses.includes(claim.status)) {
       throw new Error(`Invalid claim status for ${claim.claim_id}: ${claim.status}`);
+    }
+    for (const override of claim.reviewer_overrides ?? []) {
+      if (!claimStatuses.includes(override.new_status) || !claimStatuses.includes(override.previous_status)) {
+        throw new Error(`Invalid reviewer override status for ${claim.claim_id}.`);
+      }
+      if (!override.note.trim()) {
+        throw new Error(`Reviewer override for ${claim.claim_id} is missing a note.`);
+      }
     }
   }
   for (const evaluation of value.evaluations) {
