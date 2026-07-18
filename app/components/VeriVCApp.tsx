@@ -7,6 +7,7 @@ import { auditPackageFileName, parseAuditPackageJson, serializeAuditPackage } fr
 import { getScoringProfile, scoringProfiles, summarizeWeightedRecommendation, type ScoringProfileId } from "@/lib/scoringProfiles";
 import { extractPdfTextFromFile } from "@/lib/pdfExtraction";
 import { fetchGithubSnapshotFromUrl, formatGithubSnapshot } from "@/lib/githubAnalysis";
+import { applyClaimReviewerOverride } from "@/lib/reviewerOverrides";
 import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -310,7 +311,7 @@ function ScoreCard({ evaluation }: { evaluation: CategoryEvaluation }) {
   );
 }
 
-function ClaimExplorer({ claims, evidence }: { claims: Claim[]; evidence: Evidence[] }) {
+function ClaimExplorer({ claims, evidence, onOverrideClaim }: { claims: Claim[]; evidence: Evidence[]; onOverrideClaim: (claimId: string, status: Claim["status"], confidence: Claim["confidence"], note: string) => void }) {
   const byId = useMemo(() => evidenceById(evidence), [evidence]);
   const [filter, setFilter] = useState("all");
   const visible = filter === "all" ? claims : claims.filter((claim) => claim.status === filter);
@@ -338,11 +339,40 @@ function ClaimExplorer({ claims, evidence }: { claims: Claim[]; evidence: Eviden
               <div><h4>Supporting evidence</h4>{claim.supporting_evidence_ids.length ? claim.supporting_evidence_ids.map((id) => <EvidenceMini key={id} evidence={byId.get(id)} />) : <p className="muted">No support linked.</p>}</div>
               <div><h4>Contradicting evidence</h4>{claim.contradicting_evidence_ids.length ? claim.contradicting_evidence_ids.map((id) => <EvidenceMini key={id} evidence={byId.get(id)} />) : <p className="muted">No contradiction linked.</p>}</div>
               <div className="full-span"><h4>Missing evidence</h4>{claim.missing_evidence.length ? <ul>{claim.missing_evidence.map((item) => <li key={item}>{item}</li>)}</ul> : <p className="muted">No major missing evidence for this claim.</p>}</div>
+              {claim.reviewer_overrides?.length ? <div className="full-span override-history"><h4>Reviewer override history</h4>{claim.reviewer_overrides.map((override) => <p key={override.override_id}><strong>{override.updated_at}</strong>: {override.previous_status}/{override.previous_confidence} → {override.new_status}/{override.new_confidence}. {override.note}</p>)}</div> : null}
+              <ClaimOverrideForm claim={claim} onOverrideClaim={onOverrideClaim} />
             </div>
           </details>
         ))}
       </div>
     </section>
+  );
+}
+
+function ClaimOverrideForm({ claim, onOverrideClaim }: { claim: Claim; onOverrideClaim: (claimId: string, status: Claim["status"], confidence: Claim["confidence"], note: string) => void }) {
+  const [status, setStatus] = useState<Claim["status"]>(claim.status);
+  const [confidence, setConfidence] = useState<Claim["confidence"]>(claim.confidence);
+  const [note, setNote] = useState("");
+  const [message, setMessage] = useState("");
+  return (
+    <form className="claim-override-form full-span" onSubmit={(event) => {
+      event.preventDefault();
+      if (note.trim().length < 8) {
+        setMessage("Add a reviewer reason with at least 8 characters.");
+        return;
+      }
+      onOverrideClaim(claim.claim_id, status, confidence, note.trim());
+      setMessage("Reviewer override saved to audit trail.");
+      setNote("");
+    }}>
+      <div className="section-heading compact-heading"><span>Reviewer override</span><small>Human edits are preserved in memo and audit JSON</small></div>
+      <div className="claim-override-grid">
+        <label>Status<select value={status} onChange={(event) => setStatus(event.target.value as Claim["status"])}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+        <label>Confidence<select value={confidence} onChange={(event) => setConfidence(event.target.value as Claim["confidence"])}><option value="high">high</option><option value="medium">medium</option><option value="low">low</option></select></label>
+        <label className="full-span">Override reason<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Example: Partner reviewed updated Stripe export; claim is partially supported pending signed customer list." /></label>
+      </div>
+      <div className="form-actions"><button className="secondary-button" type="submit">Save reviewer override</button>{message ? <Badge tone={message.startsWith("Add") ? "amber" : "green"}>{message}</Badge> : null}</div>
+    </form>
   );
 }
 
@@ -426,7 +456,7 @@ function MemoPanel({ review, weightedSummary }: { review: ReviewResult; weighted
   );
 }
 
-function ReviewWorkspace({ review, onBack, onNew, onAddEvidence }: { review: ReviewResult; onBack: () => void; onNew: () => void; onAddEvidence: (evidence: Evidence) => void }) {
+function ReviewWorkspace({ review, onBack, onNew, onAddEvidence, onOverrideClaim }: { review: ReviewResult; onBack: () => void; onNew: () => void; onAddEvidence: (evidence: Evidence) => void; onOverrideClaim: (claimId: string, status: Claim["status"], confidence: Claim["confidence"], note: string) => void }) {
   const [tab, setTab] = useState<"overview" | "claims" | "evidence" | "memo">("overview");
   const [profileId, setProfileId] = useState<ScoringProfileId>("balanced");
   const scoringProfile = getScoringProfile(profileId);
@@ -450,7 +480,7 @@ function ReviewWorkspace({ review, onBack, onNew, onAddEvidence }: { review: Rev
         ].map(([id, label]) => <button key={id} className={cls(tab === id && "tab-active")} onClick={() => setTab(id as typeof tab)}>{label}</button>)}
       </nav>
       {tab === "overview" ? <Overview review={review} /> : null}
-      {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} /> : null}
+      {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} onOverrideClaim={onOverrideClaim} /> : null}
       {tab === "evidence" ? <EvidenceVault evidence={review.evidence} onAddEvidence={onAddEvidence} /> : null}
       {tab === "memo" ? <MemoPanel review={review} weightedSummary={weightedSummary} /> : null}
     </section>
@@ -529,12 +559,17 @@ export default function VeriVCApp() {
     saveReview(runReviewWithEvidencePacket(review.input, [...review.evidence, evidence]));
   };
 
+  const overrideClaimInCurrentReview = (claimId: string, status: Claim["status"], confidence: Claim["confidence"], note: string) => {
+    if (!review) return;
+    saveReview(applyClaimReviewerOverride(review, { claimId, status, confidence, note }));
+  };
+
   return (
     <main className="app-shell">
       <header className="topbar"><button className="brand" onClick={() => setMode("dashboard")} aria-label="Go to VeriVC dashboard"><span>V</span><strong>VeriVC</strong></button><div className="topbar-note">Evidence-driven AI startup due-diligence copilot</div></header>
       {mode === "dashboard" ? <Dashboard recent={recent} onOpenReview={(item) => { setReview(item); setMode("review"); }} onClearReviews={() => { setRecent([]); setReview(undefined); }} onImportReview={(item) => saveReview(item)} onNew={() => { setDraft(undefined); setMode("intake"); }} onDemo={(index) => { const demo = demoCompanies[index]; setDraft(demo.input); run(demo.input, demo.evidence); }} /> : null}
       {mode === "intake" ? <IntakeForm initialInput={draft} onCancel={() => setMode("dashboard")} onRun={(input) => run(input)} /> : null}
-      {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
+      {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onOverrideClaim={overrideClaimInCurrentReview} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
     </main>
   );
 }
