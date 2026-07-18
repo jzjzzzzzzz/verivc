@@ -19,3 +19,8 @@
 - Audit JSON export is not encrypted and should be handled as a sensitive diligence artifact if real data is entered.
 - Reviewer-added evidence is not automatically authenticated; the reviewer must verify the source before relying on it.
 - Deck text extraction is still paste-based in this iteration; automatic PDF parsing is not yet implemented.
+
+## Third-iteration limitations
+
+- Audit package import validates structure but does not cryptographically verify provenance or detect tampering.
+- Imported JSON should be treated as sensitive and only loaded from trusted local sources.

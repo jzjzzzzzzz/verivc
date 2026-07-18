@@ -89,3 +89,11 @@ After showing the evidence vault, add a new manual evidence item:
 Click **Add evidence + rerun analysis** and show that VeriVC relinks the graph instead of appending an untraceable note.
 
 Then click **Export audit JSON** to show the full review package, and return to the dashboard to show the local review library.
+
+## 11. Audit import round trip
+
+1. Open a review and click **Export audit JSON**.
+2. Return to the dashboard.
+3. In **Review library**, click **Choose JSON** and select the exported file.
+4. Show that the review reopens with claims, evidence, recommendation, and memo intact.
+5. Explain that this is useful for partner review handoff and later audit replay.

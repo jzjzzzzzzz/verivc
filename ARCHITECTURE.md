@@ -119,3 +119,13 @@ The UI can export a JSON audit package with schema version, export timestamp, an
 ### Deck text handling
 
 `StartupInput.deckText` captures pasted or extracted deck text. The engine treats it as both a claim source and a deck evidence artifact, while the PDF filename remains preserved separately. This avoids pretending that an uploaded PDF has been parsed when only the filename is available.
+
+## Third-iteration audit import
+
+`lib/auditPackage.ts` centralizes audit package serialization and parsing. An audit package has:
+
+- `schema_version: verivc.review.v1`
+- `exported_at`
+- `review`
+
+`parseAuditPackageJson` rejects malformed JSON, unsupported schema versions, missing review payloads, invalid recommendation states, invalid claim statuses, and out-of-range scores. The dashboard import UI only saves the review after validation succeeds.

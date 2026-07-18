@@ -116,3 +116,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Audit package export:** download a JSON bundle containing the full review result, claims, evidence, findings, scores, memo, and provenance log.
 - **Reviewer-added evidence:** add a new evidence excerpt after a review, then rerun analysis without losing the audit trail.
 - **Deck text path:** paste page-labelled deck excerpts so claims can be extracted while the PDF filename remains preserved as an artifact.
+
+## Added in the third iteration
+
+- **Audit package import:** choose a previously exported VeriVC JSON package from the dashboard and reopen the full review graph.
+- **Import validation:** imported files must match the `verivc.review.v1` schema and pass review-result validation before entering the review library.
+- **Round-trip workflow:** reviewers can export an audit package, share it locally, import it later, add evidence, and rerun the analysis.

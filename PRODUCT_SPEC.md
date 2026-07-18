@@ -42,3 +42,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Export complete JSON audit package.
 - Add reviewer evidence after analysis and rerun claim-evidence linking.
 - Accept pasted deck text as a first-class source while preserving uploaded PDF filename provenance.
+
+## Third-iteration requirements completed
+
+- Exported audit packages can be imported from the dashboard.
+- Import path validates schema version and review shape before adding to the local review library.
+- Export/import enables an offline handoff loop for judges or investment partners.
