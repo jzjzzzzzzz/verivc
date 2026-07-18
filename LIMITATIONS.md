@@ -41,3 +41,9 @@
 - GitHub analysis only works for public repositories visible to the unauthenticated GitHub API.
 - Rate limits, network failures, private repos, monorepos, mirrors, generated code, and separate production repositories may make the snapshot incomplete.
 - Repository activity is a diligence signal, not proof of technical quality, ownership, production readiness, security, or customer adoption.
+
+## Seventh-iteration limitations
+
+- Reviewer claim overrides are human annotations, not automatic verification and not a substitute for primary evidence.
+- Claim overrides update the claim record, memo, and audit trail; category scorecards remain rule-based unless evidence is added and the review is rerun.
+- Override reasons should not contain sensitive information unless the local audit package is handled securely.

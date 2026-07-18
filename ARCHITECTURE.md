@@ -149,3 +149,7 @@ PDF extraction is intentionally client-side and local for hackathon reliability.
 ## Sixth-iteration GitHub enrichment
 
 `lib/githubAnalysis.ts` parses GitHub repository URLs and fetches a bounded unauthenticated public API snapshot with an abort timeout. The snapshot includes repository visibility, stars, forks, watchers, open issues/PR count, default branch, language mix, README presence, license detection, a small contributor sample count, and latest commit metadata. The intake UI writes the formatted snapshot into `StartupInput.githubSnapshot`; `buildEvidenceFromInput` converts it into `github` evidence with explicit limitations. GitHub evidence can support technical diligence claims, but scoring and memos continue to state that public repository activity does not prove product quality, security, customer value, ownership, or production readiness.
+
+## Seventh-iteration reviewer overrides
+
+`lib/reviewerOverrides.ts` adds a human-judgment layer on top of the deterministic evidence graph. A reviewer can adjust a claim status and confidence only with an explanatory note. The helper records previous/new status, previous/new confidence, timestamp, note, and override ID on the claim. It also appends a provenance-log entry and a `Reviewer Override Log` section to the memo. This does not silently recompute the rule-based evaluation cards; if new evidence should alter scoring, the reviewer should add evidence and rerun the analysis.

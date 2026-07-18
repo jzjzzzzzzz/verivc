@@ -106,7 +106,11 @@ Click **New Review**, choose a text-based PDF pitch deck, and show the extractio
 
 On **New Review**, enter a public GitHub repository URL and click **Analyze GitHub**. Show that VeriVC captures stars, forks, README/license status, language mix, and latest commit metadata as evidence. Then point out the limitation text: GitHub activity helps technical diligence but does not prove product quality or production readiness.
 
-## 14. Fund profile weighting
+## 14. Reviewer claim override
+
+Open a contradicted or insufficient claim. In **Reviewer override**, change the status or confidence, add a reason such as `Partner reviewed updated Stripe export; claim is partially supported pending signed customer list`, and save. Show that the override appears in the claim history, memo, and audit JSON. Explain that adding new evidence and rerunning is still the path for rule-based rescoring.
+
+## 15. Fund profile weighting
 
 Open GrainLoop, then switch the **Fund scoring profile** selector between:
 

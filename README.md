@@ -12,7 +12,7 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 - Detects contradictions and gaps such as unsupported rapid growth, weak market sizing, “no competitors” conflicts, and production-readiness claims without technical proof.
 - Scores diligence categories with deterministic, visible rules.
 - Generates founder follow-up questions grouped by diligence area.
-- Produces a Markdown investment memo with evidence IDs, limitations, conditions, and a restrained human-review recommendation.
+- Produces a Markdown investment memo with evidence IDs, limitations, conditions, reviewer override log, and a restrained human-review recommendation.
 - Runs fully in deterministic demo mode without paid APIs; optional GitHub analysis uses only unauthenticated public GitHub API calls with timeouts.
 
 ## Why it is different
@@ -81,6 +81,7 @@ npm run test:rendered  # build + server-render smoke test
 - `lib/llm.ts` — OpenAI-compatible provider abstraction with mock/provider-unavailable behavior.
 - `lib/pdfExtraction.ts` — browser-side PDF upload validation, local text extraction, page-label formatting, truncation handling, and filename sanitization.
 - `lib/githubAnalysis.ts` — public GitHub repository URL parsing, API snapshot fetching, timeout handling, and evidence text formatting.
+- `lib/reviewerOverrides.ts` — reviewer claim override validation, memo addendum generation, and audit-trail preservation.
 - `app/components/VeriVCApp.tsx` — local review workflow, dashboard, intake, claim-evidence explorer, evidence vault, scorecards, questions, and memo export.
 
 ## Privacy and safety notes
@@ -143,3 +144,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Public GitHub snapshot:** enter a repository URL and click **Analyze GitHub** to fetch stars, forks, default branch, language mix, README/license presence, contributor sample, and latest commit metadata.
 - **GitHub as evidence:** the snapshot is stored as `github` evidence and linked into technical diligence without claiming that repo activity proves product quality.
 - **Timeout-safe enrichment:** GitHub analysis is optional, unauthenticated, and non-blocking; unavailable data remains explicit.
+
+## Added in the seventh iteration
+
+- **Reviewer claim overrides:** investors can change a claim status and confidence from the claim explorer with a required reason.
+- **Audit-preserved human judgment:** overrides append to claim notes, provenance log, audit JSON, and the Markdown memo override log.
+- **Human oversight boundary:** overrides are visible human annotations; adding evidence and rerunning remains the path for rule-based rescoring.

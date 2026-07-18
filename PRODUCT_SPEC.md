@@ -66,3 +66,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added optional public GitHub repository analysis from the intake form.
 - Added GitHub snapshot evidence covering stars, forks, language mix, README/license, contributor sample, latest commit, and limitations.
 - Added timeout-safe fallback behavior so unavailable GitHub data never blocks the review.
+
+## Seventh-iteration requirements completed
+
+- Added reviewer-editable claim status and confidence controls.
+- Required an override reason and preserved previous/new values.
+- Added reviewer override history to claim detail, memo export, provenance log, and audit package JSON.
