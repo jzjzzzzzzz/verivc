@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { demoCompanies } from "../lib/demoData.ts";
+import { auditPackageFileName, parseAuditPackageJson, serializeAuditPackage } from "../lib/auditPackage.ts";
 import { associateEvidence, buildEvidenceFromInput, extractClaims, runReview, runReviewWithEvidencePacket, selectRecommendation } from "../lib/engine.ts";
 import { assertReviewResult, recommendationStates } from "../lib/types.ts";
 
@@ -108,4 +109,21 @@ test("review can be rerun with a reviewer-added evidence packet", () => {
   ]);
   assert.ok(rerun.evidence.find((item) => item.evidence_id === "EV-ADD-TEST")?.supports_claim_ids.length);
   assert.ok(rerun.claims.some((claim) => claim.supporting_evidence_ids.includes("EV-ADD-TEST")));
+});
+
+
+test("audit package serializes and validates review imports", () => {
+  const review = runReview(demoCompanies[1].input, demoCompanies[1].evidence);
+  const serialized = serializeAuditPackage(review);
+  const imported = parseAuditPackageJson(serialized);
+  assert.equal(imported.schema_version, "verivc.review.v1");
+  assert.equal(imported.review.profile.company_name, "GrainLoop");
+  assert.equal(imported.review.recommendation.state, review.recommendation.state);
+  assert.equal(auditPackageFileName(review), "grainloop-verivc-audit-package.json");
+});
+
+test("audit package import rejects malformed or unsupported packages", () => {
+  assert.throws(() => parseAuditPackageJson("not json"), /not valid JSON/);
+  assert.throws(() => parseAuditPackageJson(JSON.stringify({ schema_version: "other", exported_at: "now", review: {} })), /Unsupported audit package schema/);
+  assert.throws(() => parseAuditPackageJson(JSON.stringify({ schema_version: "verivc.review.v1", exported_at: "now" })), /missing review payload/);
 });
