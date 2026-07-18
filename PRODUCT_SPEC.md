@@ -11,7 +11,7 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 ## MVP workflow
 
 1. Create review.
-2. Enter company details, pitch, URLs, notes, optional pitch deck PDF, evidence, and thesis.
+2. Enter company details, pitch, URLs, optional GitHub snapshot, notes, optional pitch deck PDF, evidence, and thesis.
 3. Extract structured startup profile and typed claims.
 4. Link claims to evidence and contradictions.
 5. Score diligence categories with visible rules.
@@ -60,3 +60,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added browser-side PDF pitch deck text extraction.
 - Added page-labelled deck text formatting and page-level claim source references.
 - Added PDF validation, filename sanitization, extraction status, truncation handling, and fallback to pasted excerpts.
+
+## Sixth-iteration requirements completed
+
+- Added optional public GitHub repository analysis from the intake form.
+- Added GitHub snapshot evidence covering stars, forks, language mix, README/license, contributor sample, latest commit, and limitations.
+- Added timeout-safe fallback behavior so unavailable GitHub data never blocks the review.

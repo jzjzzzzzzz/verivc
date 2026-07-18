@@ -42,7 +42,7 @@ Evidence preserves provenance:
 - linked support/contradiction claim IDs
 - limitations
 
-The system never invents missing evidence. Website/GitHub URLs are captured as provenance artifacts. Text-based PDF pitch decks can be extracted locally in the browser; if extraction fails, the filename remains preserved and missing deck text is explicit.
+The system never invents missing evidence. Website URLs are captured as provenance artifacts. Text-based PDF pitch decks can be extracted locally in the browser; if extraction fails, the filename remains preserved and missing deck text is explicit.
 
 ## Evidence association
 
@@ -145,3 +145,7 @@ This keeps fund-thesis customization explainable while preserving the evidence-f
 ## Fifth-iteration PDF extraction
 
 PDF extraction is intentionally client-side and local for hackathon reliability. The UI disables the file control while extraction is running, reports processed pages and character count, writes extracted text into the editable deck text field, and keeps manual pasted excerpts as a fallback. The extraction layer does not execute embedded PDF content and does not claim OCR coverage for scanned/image-only decks.
+
+## Sixth-iteration GitHub enrichment
+
+`lib/githubAnalysis.ts` parses GitHub repository URLs and fetches a bounded unauthenticated public API snapshot with an abort timeout. The snapshot includes repository visibility, stars, forks, watchers, open issues/PR count, default branch, language mix, README presence, license detection, a small contributor sample count, and latest commit metadata. The intake UI writes the formatted snapshot into `StartupInput.githubSnapshot`; `buildEvidenceFromInput` converts it into `github` evidence with explicit limitations. GitHub evidence can support technical diligence claims, but scoring and memos continue to state that public repository activity does not prove product quality, security, customer value, ownership, or production readiness.

@@ -7,9 +7,9 @@
 - LLM analysis, if enabled later, may be wrong and must be validated against source evidence.
 - Private financial claims require primary documents such as bank records, payment processor exports, signed contracts, and customer references.
 - Founder identity, employment history, education, technical authorship, and background must not be assumed from weak public-name matches.
-- GitHub metrics can help diligence technical execution but do not prove product quality, security, reliability, or customer value.
+- GitHub metrics can help diligence technical execution but do not prove product quality, security, reliability, customer value, ownership, or production readiness.
 - PDF upload extracts text locally for text-based PDFs, but scanned/image-only decks, charts, complex tables, hidden speaker notes, and unusual encodings may require pasted excerpts or primary documents.
-- Website and GitHub live enrichment are not required for the deterministic demo and are represented through provided snapshots or captured URLs.
+- Website live enrichment is not required for the deterministic demo. GitHub enrichment is optional and uses unauthenticated public repository data only.
 - Legal, regulatory, privacy, securities, tax, employment, and IP issues require qualified human review.
 - No real money is transferred, no founders are contacted, and no external commitments are made.
 
@@ -35,3 +35,9 @@
 - PDF extraction is best-effort text extraction, not OCR and not layout verification.
 - Extracted deck text may omit images, charts, tables, footnotes, or speaker notes; page labels support traceability but are not a substitute for reviewing the original deck.
 - The app enforces a local file-size/page/character limit to keep browser extraction responsive.
+
+## Sixth-iteration limitations
+
+- GitHub analysis only works for public repositories visible to the unauthenticated GitHub API.
+- Rate limits, network failures, private repos, monorepos, mirrors, generated code, and separate production repositories may make the snapshot incomplete.
+- Repository activity is a diligence signal, not proof of technical quality, ownership, production readiness, security, or customer adoption.

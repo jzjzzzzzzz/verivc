@@ -102,7 +102,11 @@ Then click **Export audit JSON** to show the full review package, and return to 
 
 Click **New Review**, choose a text-based PDF pitch deck, and show the extraction status. Point out that the deck text field is filled with `Page N:` excerpts, then run the review and open a deck-sourced claim to show a source reference such as `Pitch deck page 6`. Explain that scanned decks still require pasted excerpts or primary documents.
 
-## 13. Fund profile weighting
+## 13. GitHub public snapshot
+
+On **New Review**, enter a public GitHub repository URL and click **Analyze GitHub**. Show that VeriVC captures stars, forks, README/license status, language mix, and latest commit metadata as evidence. Then point out the limitation text: GitHub activity helps technical diligence but does not prove product quality or production readiness.
+
+## 14. Fund profile weighting
 
 Open GrainLoop, then switch the **Fund scoring profile** selector between:
 

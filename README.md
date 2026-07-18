@@ -6,14 +6,14 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 
 ## What it does
 
-- Creates a startup review from company name, website, GitHub URL, pitch, sector, stage, optional pitch deck PDF, pasted evidence, notes, and review criteria.
+- Creates a startup review from company name, website, GitHub URL, optional public GitHub snapshot, pitch, sector, stage, optional pitch deck PDF, pasted evidence, notes, and review criteria.
 - Extracts structured startup claims into typed claim records.
 - Links claims to evidence as supported, partially supported, contradicted, insufficient, or unverifiable.
 - Detects contradictions and gaps such as unsupported rapid growth, weak market sizing, “no competitors” conflicts, and production-readiness claims without technical proof.
 - Scores diligence categories with deterministic, visible rules.
 - Generates founder follow-up questions grouped by diligence area.
 - Produces a Markdown investment memo with evidence IDs, limitations, conditions, and a restrained human-review recommendation.
-- Runs fully in deterministic demo mode without paid APIs.
+- Runs fully in deterministic demo mode without paid APIs; optional GitHub analysis uses only unauthenticated public GitHub API calls with timeouts.
 
 ## Why it is different
 
@@ -80,6 +80,7 @@ npm run test:rendered  # build + server-render smoke test
 - `lib/engine.ts` — claim extraction, evidence association, contradiction detection, scoring, recommendation logic, and memo generation.
 - `lib/llm.ts` — OpenAI-compatible provider abstraction with mock/provider-unavailable behavior.
 - `lib/pdfExtraction.ts` — browser-side PDF upload validation, local text extraction, page-label formatting, truncation handling, and filename sanitization.
+- `lib/githubAnalysis.ts` — public GitHub repository URL parsing, API snapshot fetching, timeout handling, and evidence text formatting.
 - `app/components/VeriVCApp.tsx` — local review workflow, dashboard, intake, claim-evidence explorer, evidence vault, scorecards, questions, and memo export.
 
 ## Privacy and safety notes
@@ -94,7 +95,7 @@ npm run test:rendered  # build + server-render smoke test
 ## Known limitations
 
 - PDF upload now extracts text locally in the browser for text-based PDFs and creates `Page N:` references; scanned/image-only decks, complex tables, charts, and speaker notes may still require pasted excerpts or primary documents.
-- Website and GitHub URLs are captured for provenance, but live scraping is intentionally not required for deterministic demo reliability.
+- Website URLs are captured for provenance. GitHub URLs can optionally fetch a public repository snapshot; failures, private repositories, and rate limits fall back to captured URL/manual evidence.
 - Scoring is heuristic and explainable, not statistically calibrated.
 - LLM integration is abstracted but not required for the core local demo.
 - Primary financial documents, customer contracts, legal review, and founder background checks remain human diligence tasks.
@@ -106,7 +107,8 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 ## Future roadmap
 
 - OCR for scanned pitch decks and richer PDF table/chart extraction.
-- Optional public website/GitHub enrichment with caching, timeouts, and source snapshots.
+- Optional public website enrichment with caching, timeouts, and source snapshots.
+- Authenticated GitHub enrichment for private repos and richer commit/release/security signals.
 - Reviewer-editable claim/evidence graph and manual evidence uploads.
 - Calibrated fund-specific scoring profiles.
 - Secure multi-review persistence with export bundles.
@@ -135,3 +137,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Local PDF extraction:** uploading a text-based PDF pitch deck extracts page-labelled text directly in the browser.
 - **Page-level claim provenance:** extracted deck claims now use references such as `Pitch deck page 6` in the claim explorer and memo evidence flow.
 - **Defensive upload handling:** PDF validation enforces type and size limits, sanitizes filenames, truncates very long decks, and falls back to pasted text when extraction fails.
+
+## Added in the sixth iteration
+
+- **Public GitHub snapshot:** enter a repository URL and click **Analyze GitHub** to fetch stars, forks, default branch, language mix, README/license presence, contributor sample, and latest commit metadata.
+- **GitHub as evidence:** the snapshot is stored as `github` evidence and linked into technical diligence without claiming that repo activity proves product quality.
+- **Timeout-safe enrichment:** GitHub analysis is optional, unauthenticated, and non-blocking; unavailable data remains explicit.
