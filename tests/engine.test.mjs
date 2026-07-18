@@ -82,7 +82,7 @@ test("deck text becomes claim and evidence provenance", () => {
     deckFileName: "deckco.pdf",
     deckText: "Page 6: DeckCo reached $20K MRR across 12 clinics and charges $400 per clinic per month.",
   });
-  assert.ok(review.claims.some((claim) => claim.source_type === "deck" && claim.claim_text.includes("$20K MRR")));
+  assert.ok(review.claims.some((claim) => claim.source_type === "deck" && claim.source_reference === "Pitch deck page 6" && claim.claim_text.includes("$20K MRR")));
   assert.ok(review.evidence.some((item) => item.evidence_id.startsWith("EV-DECKTXT") && item.excerpt.includes("Page 6")));
 });
 

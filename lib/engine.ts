@@ -106,10 +106,23 @@ function makeClaim(index: number, sentence: string, source_type: Claim["source_t
   };
 }
 
+function deckSourceBlocks(deckText: string | undefined): Array<[Claim["source_type"], string, string]> {
+  const text = deckText?.trim();
+  if (!text) return [["deck", "Pitch deck extracted/pasted text", ""]];
+  const matches = [...text.matchAll(/(?:^|\n)Page\s+(\d+)\s*:/gi)];
+  if (!matches.length) return [["deck", "Pitch deck extracted/pasted text", text]];
+  return matches.map((match, index) => {
+    const start = (match.index ?? 0) + match[0].length;
+    const end = index + 1 < matches.length ? matches[index + 1].index ?? text.length : text.length;
+    const pageNumber = match[1];
+    return ["deck", `Pitch deck page ${pageNumber}`, text.slice(start, end).trim()];
+  });
+}
+
 export function extractClaims(input: StartupInput): Claim[] {
   const sourceBlocks: Array<[Claim["source_type"], string, string]> = [
     ["pitch", "Pitch description", input.pitch],
-    ["deck", "Pitch deck extracted/pasted text", input.deckText ?? ""],
+    ...deckSourceBlocks(input.deckText),
     ["founder_note", "Reviewer / founder notes", input.notes ?? ""],
   ];
   let index = 0;
@@ -125,13 +138,13 @@ export function extractClaims(input: StartupInput): Claim[] {
       }
     }
   }
-  if (input.deckFileName) {
+  if (input.deckFileName && !input.deckText?.trim()) {
     claims.push({
-      ...makeClaim(index, `Pitch deck file ${input.deckFileName} was uploaded but local demo mode does not extract embedded PDF text.`, "deck", input.deckFileName),
+      ...makeClaim(index, `Pitch deck file ${input.deckFileName} was uploaded but no deck text was available for extraction.`, "deck", input.deckFileName),
       category: "execution",
       claim_type: "fact",
       status: "unverifiable",
-      missing_evidence: ["Paste key deck text or enable a PDF extraction provider to preserve page-level citations."],
+      missing_evidence: ["Extract PDF text locally or paste key deck text to preserve page-level citations."],
     });
   }
   return claims.slice(0, 24);
@@ -203,15 +216,19 @@ export function buildEvidenceFromInput(input: StartupInput, provided: Evidence[]
     evidence.push({
       evidence_id: `EV-DECK-${String(evidence.length + 1).padStart(3, "0")}`,
       source_type: "deck",
-      title: "Uploaded pitch deck placeholder",
+      title: input.deckText?.trim() ? "Uploaded pitch deck artifact" : "Uploaded pitch deck placeholder",
       url_or_file: input.deckFileName,
-      excerpt: `PDF file name captured: ${input.deckFileName}. Text extraction is intentionally explicit rather than inferred.`,
+      excerpt: input.deckText?.trim()
+        ? `PDF file name captured: ${input.deckFileName}. Deck text was locally extracted or pasted with explicit page references.`
+        : `PDF file name captured: ${input.deckFileName}. Text extraction is intentionally explicit rather than inferred.`,
       captured_at: now,
       reliability_level: "unknown",
       relevance: "medium",
       supports_claim_ids: [],
       contradicts_claim_ids: [],
-      limitations: ["This local MVP records the PDF artifact but does not execute or parse embedded content."],
+      limitations: input.deckText?.trim()
+        ? ["PDF artifact name is preserved; extracted text may omit images, charts, speaker notes, or scanned pages."]
+        : ["This local MVP records the PDF artifact but could not extract text from it."],
     });
   }
   return evidence;

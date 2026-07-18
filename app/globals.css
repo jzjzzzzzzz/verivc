@@ -83,6 +83,9 @@ h3 { font-size: 1.02rem; letter-spacing: -0.02em; }
 .section-heading span { font-size: 1.1rem; font-weight: 850; letter-spacing: -0.03em; }
 .empty-state, .error-note, .file-note { padding: 14px 16px; border-radius: 18px; border: 1px dashed var(--line); background: rgba(255,255,255,.55); color: var(--muted); }
 .error-note { color: var(--red); border-color: rgba(192,53,53,.25); }
+.file-note-green { color: var(--green); border-color: rgba(18,128,92,.24); background: rgba(18,128,92,.07); }
+.file-note-amber { color: var(--amber); border-color: rgba(170,106,0,.24); background: rgba(170,106,0,.07); }
+.file-note-red { color: var(--red); border-color: rgba(192,53,53,.25); background: rgba(192,53,53,.07); }
 .recent-list { display: grid; gap: 10px; }
 .recent-row { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 16px; background: rgba(255,255,255,.54); }
 .intake-shell { padding: clamp(22px, 4vw, 44px); }

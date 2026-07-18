@@ -5,6 +5,7 @@ import { demoCompanies } from "@/lib/demoData";
 import { runReview, runReviewWithEvidencePacket } from "@/lib/engine";
 import { auditPackageFileName, parseAuditPackageJson, serializeAuditPackage } from "@/lib/auditPackage";
 import { getScoringProfile, scoringProfiles, summarizeWeightedRecommendation, type ScoringProfileId } from "@/lib/scoringProfiles";
+import { extractPdfTextFromFile } from "@/lib/pdfExtraction";
 import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -205,7 +206,27 @@ function AuditImportPanel({ onImportReview }: { onImportReview: (review: ReviewR
 function IntakeForm({ initialInput, onCancel, onRun }: { initialInput?: StartupInput; onCancel: () => void; onRun: (input: StartupInput) => void }) {
   const [input, setInput] = useState<StartupInput>(initialInput ?? emptyInput);
   const [error, setError] = useState("");
+  const [pdfStatus, setPdfStatus] = useState<{ tone: "green" | "amber" | "red"; text: string }>();
+  const [isExtractingPdf, setIsExtractingPdf] = useState(false);
   const set = (key: keyof StartupInput, value: string) => setInput((current) => ({ ...current, [key]: value }));
+  async function handlePdfUpload(file: File | undefined) {
+    if (!file) return;
+    setIsExtractingPdf(true);
+    setPdfStatus({ tone: "amber", text: `Extracting text from ${file.name} locally...` });
+    setInput((current) => ({ ...current, deckFileName: file.name }));
+    try {
+      const extracted = await extractPdfTextFromFile(file);
+      setInput((current) => ({ ...current, deckFileName: extracted.sanitizedFileName, deckText: extracted.text }));
+      setPdfStatus({
+        tone: extracted.truncated ? "amber" : "green",
+        text: `Extracted ${extracted.processedPages}/${extracted.pageCount} pages and ${extracted.charCount.toLocaleString()} characters. Claims will cite Page N references.`,
+      });
+    } catch (err) {
+      setPdfStatus({ tone: "red", text: err instanceof Error ? err.message : "Unable to extract PDF text locally." });
+    } finally {
+      setIsExtractingPdf(false);
+    }
+  }
   return (
     <section className="intake-shell" aria-labelledby="intake-title">
       <div className="panel-header">
@@ -230,14 +251,15 @@ function IntakeForm({ initialInput, onCancel, onRun }: { initialInput?: StartupI
           <label>Stage<select value={input.stage} onChange={(e) => set("stage", e.target.value)}><option>Pre-seed</option><option>Seed</option><option>Series A</option><option>Accelerator</option><option>Competition</option></select></label>
           <label>Company website<input value={input.websiteUrl} onChange={(e) => set("websiteUrl", e.target.value)} placeholder="https://..." /></label>
           <label>GitHub URL<input value={input.githubUrl} onChange={(e) => set("githubUrl", e.target.value)} placeholder="https://github.com/..." /></label>
-          <label>Optional pitch deck PDF<input type="file" accept="application/pdf,.pdf" onChange={(e) => set("deckFileName", e.target.files?.[0]?.name ?? "")} /></label>
+          <label>Optional pitch deck PDF<input type="file" accept="application/pdf,.pdf" disabled={isExtractingPdf} onChange={(e) => void handlePdfUpload(e.target.files?.[0])} /></label>
         </div>
         <label>Pitch description<textarea className="large" value={input.pitch} onChange={(e) => set("pitch", e.target.value)} placeholder="Paste the founder pitch or application answer." required /></label>
         <label>Pitch deck text or page excerpts<textarea value={input.deckText} onChange={(e) => set("deckText", e.target.value)} placeholder="Optional: paste extracted deck text with page labels, e.g. Page 5: $14.4K MRR across 8 locations." /></label>
         <label>Pasted evidence and metrics<textarea value={input.pastedEvidence} onChange={(e) => set("pastedEvidence", e.target.value)} placeholder="Paste customer references, Stripe excerpts, GitHub snapshots, market notes, or reviewer observations." /></label>
         <label>Reviewer notes / traction details<textarea value={input.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Add contradictions, caveats, meeting notes, or extra founder claims." /></label>
         <label>Investor thesis or review criteria<textarea value={input.investmentThesis} onChange={(e) => set("investmentThesis", e.target.value)} placeholder="Optional: describe what this fund or judge values." /></label>
-        {input.deckFileName ? <p className="file-note">Captured PDF artifact: <strong>{input.deckFileName}</strong>. Local MVP preserves file provenance; paste key deck text above for claim extraction.</p> : null}
+        {pdfStatus ? <p className={cls("file-note", `file-note-${pdfStatus.tone}`)}>{pdfStatus.text}</p> : null}
+        {input.deckFileName ? <p className="file-note">Captured PDF artifact: <strong>{input.deckFileName}</strong>. {input.deckText?.trim() ? "Deck text is available for page-level claim extraction." : "Paste key deck text above if extraction is unavailable."}</p> : null}
         {error ? <p className="error-note">{error}</p> : null}
         <div className="form-actions"><button type="button" className="secondary-button" onClick={onCancel}>Cancel</button><button type="submit" className="primary-button">Run evidence review</button></div>
       </form>
