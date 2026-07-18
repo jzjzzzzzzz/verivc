@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { demoCompanies } from "../lib/demoData.ts";
-import { associateEvidence, buildEvidenceFromInput, extractClaims, runReview, selectRecommendation } from "../lib/engine.ts";
+import { associateEvidence, buildEvidenceFromInput, extractClaims, runReview, runReviewWithEvidencePacket, selectRecommendation } from "../lib/engine.ts";
 import { assertReviewResult, recommendationStates } from "../lib/types.ts";
 
 test("schema validation accepts generated demo reviews", () => {
@@ -68,4 +68,44 @@ test("recommendation logic escalates conflicts to manual review or decline", () 
   const recommendation = selectRecommendation(risky.evaluations, risky.red_flags, risky.claims);
   assert.equal(recommendation.state, "decline_based_on_current_evidence");
   assert.ok(recommendation.reasons.join(" ").includes("contradiction"));
+});
+
+
+test("deck text becomes claim and evidence provenance", () => {
+  const review = runReview({
+    companyName: "DeckCo",
+    sector: "Vertical SaaS",
+    stage: "Seed",
+    pitch: "DeckCo helps clinics automate referral intake.",
+    deckFileName: "deckco.pdf",
+    deckText: "Page 6: DeckCo reached $20K MRR across 12 clinics and charges $400 per clinic per month.",
+  });
+  assert.ok(review.claims.some((claim) => claim.source_type === "deck" && claim.claim_text.includes("$20K MRR")));
+  assert.ok(review.evidence.some((item) => item.evidence_id.startsWith("EV-DECKTXT") && item.excerpt.includes("Page 6")));
+});
+
+test("review can be rerun with a reviewer-added evidence packet", () => {
+  const first = runReview({
+    companyName: "PacketCo",
+    sector: "Developer Tools",
+    stage: "Seed",
+    pitch: "PacketCo reached $10K MRR with 5 customers and is raising $500K.",
+  });
+  const rerun = runReviewWithEvidencePacket(first.input, [
+    ...first.evidence,
+    {
+      evidence_id: "EV-ADD-TEST",
+      source_type: "financial_document",
+      title: "Payment processor export",
+      excerpt: "Payment processor export confirms $10K MRR with 5 active customers in June 2026.",
+      captured_at: "2026-07-19T00:00:00.000Z",
+      reliability_level: "primary",
+      relevance: "high",
+      supports_claim_ids: [],
+      contradicts_claim_ids: [],
+      limitations: ["Synthetic test fixture."],
+    },
+  ]);
+  assert.ok(rerun.evidence.find((item) => item.evidence_id === "EV-ADD-TEST")?.supports_claim_ids.length);
+  assert.ok(rerun.claims.some((claim) => claim.supporting_evidence_ids.includes("EV-ADD-TEST")));
 });

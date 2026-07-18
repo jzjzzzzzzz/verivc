@@ -109,3 +109,10 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - Reviewer-editable claim/evidence graph and manual evidence uploads.
 - Calibrated fund-specific scoring profiles.
 - Secure multi-review persistence with export bundles.
+
+## Added in the second iteration
+
+- **Local review library:** completed reviews persist in browser local storage and can be reopened from the dashboard.
+- **Audit package export:** download a JSON bundle containing the full review result, claims, evidence, findings, scores, memo, and provenance log.
+- **Reviewer-added evidence:** add a new evidence excerpt after a review, then rerun analysis without losing the audit trail.
+- **Deck text path:** paste page-labelled deck excerpts so claims can be extracted while the PDF filename remains preserved as an artifact.

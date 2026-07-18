@@ -22,7 +22,7 @@ import { assertReviewResult, evaluationDimensions } from "./types";
 const highImpactWords = ["revenue", "mrr", "customer", "enterprise", "growth", "market", "moat", "production", "funding", "patent", "regulatory"];
 const metricPattern = /(?:\$\s?\d+(?:\.\d+)?\s?[kmb]?|\b\d+(?:\.\d+)?\s?%|\b\d+\s?(?:customers|users|locations|pilots|contributors|commits|mrr|arr|loi|letters|months|weeks)\b)/i;
 
-function slugify(value: string): string {
+export function slugify(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "").slice(0, 48) || "review";
 }
 
@@ -109,6 +109,7 @@ function makeClaim(index: number, sentence: string, source_type: Claim["source_t
 export function extractClaims(input: StartupInput): Claim[] {
   const sourceBlocks: Array<[Claim["source_type"], string, string]> = [
     ["pitch", "Pitch description", input.pitch],
+    ["deck", "Pitch deck extracted/pasted text", input.deckText ?? ""],
     ["founder_note", "Reviewer / founder notes", input.notes ?? ""],
   ];
   let index = 0;
@@ -139,6 +140,21 @@ export function extractClaims(input: StartupInput): Claim[] {
 export function buildEvidenceFromInput(input: StartupInput, provided: Evidence[] = []): Evidence[] {
   const now = new Date().toISOString();
   const evidence: Evidence[] = provided.map((item) => ({ ...item, supports_claim_ids: [...item.supports_claim_ids], contradicts_claim_ids: [...item.contradicts_claim_ids] }));
+  if (input.deckText?.trim()) {
+    evidence.push({
+      evidence_id: `EV-DECKTXT-${String(evidence.length + 1).padStart(3, "0")}`,
+      source_type: "deck",
+      title: "Pitch deck extracted or pasted text",
+      url_or_file: input.deckFileName || "pasted_deck_text",
+      excerpt: input.deckText.trim().slice(0, 1600),
+      captured_at: now,
+      reliability_level: "medium",
+      relevance: "high",
+      supports_claim_ids: [],
+      contradicts_claim_ids: [],
+      limitations: ["Deck text is user-provided or locally extracted; important factual claims still require primary evidence."],
+    });
+  }
   if (input.pastedEvidence?.trim()) {
     evidence.push({
       evidence_id: `EV-USR-${String(evidence.length + 1).padStart(3, "0")}`,
@@ -500,11 +516,10 @@ export function buildMemo(input: StartupInput, profile: StartupProfile, claims: 
   return { markdown, sections };
 }
 
-export function runReview(input: StartupInput, providedEvidence: Evidence[] = []): ReviewResult {
+function assembleReview(input: StartupInput, allEvidence: Evidence[]): ReviewResult {
   if (!input.companyName.trim()) throw new Error("Company name is required.");
   if (!input.pitch.trim()) throw new Error("Pitch description is required.");
   const rawClaims = extractClaims(input);
-  const allEvidence = buildEvidenceFromInput(input, providedEvidence);
   const linked = associateEvidence(rawClaims, allEvidence);
   const profile = buildStartupProfile(input, linked.claims);
   const evaluations = evaluateCategories(linked.claims, linked.evidence);
@@ -536,4 +551,17 @@ export function runReview(input: StartupInput, providedEvidence: Evidence[] = []
       "No evidence, URLs, metrics, or citations were fabricated.",
     ],
   });
+}
+
+export function runReview(input: StartupInput, providedEvidence: Evidence[] = []): ReviewResult {
+  return assembleReview(input, buildEvidenceFromInput(input, providedEvidence));
+}
+
+export function runReviewWithEvidencePacket(input: StartupInput, evidencePacket: Evidence[]): ReviewResult {
+  const cleanEvidence = evidencePacket.map((item) => ({
+    ...item,
+    supports_claim_ids: [...item.supports_claim_ids],
+    contradicts_claim_ids: [...item.contradicts_claim_ids],
+  }));
+  return assembleReview(input, cleanEvidence);
 }

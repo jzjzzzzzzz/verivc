@@ -34,3 +34,11 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - no founder outreach
 - no fabricated citations
 - no authentication or billing in MVP
+
+## Second-iteration requirements completed
+
+- Persist recent reviews locally.
+- Reopen local reviews from the dashboard.
+- Export complete JSON audit package.
+- Add reviewer evidence after analysis and rerun claim-evidence linking.
+- Accept pasted deck text as a first-class source while preserving uploaded PDF filename provenance.

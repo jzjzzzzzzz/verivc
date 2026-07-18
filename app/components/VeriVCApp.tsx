@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { demoCompanies } from "@/lib/demoData";
-import { runReview } from "@/lib/engine";
+import { runReview, runReviewWithEvidencePacket, slugify } from "@/lib/engine";
 import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -16,6 +16,7 @@ const emptyInput: StartupInput = {
   notes: "",
   pastedEvidence: "",
   deckFileName: "",
+  deckText: "",
 };
 
 const statusLabels: Record<string, string> = {
@@ -69,7 +70,40 @@ function evidenceById(evidence: Evidence[]) {
   return new Map(evidence.map((item) => [item.evidence_id, item]));
 }
 
-function Dashboard({ onDemo, onNew, recent }: { onDemo: (index: number) => void; onNew: () => void; recent: ReviewResult[] }) {
+const storageKey = "verivc.reviews.v2";
+
+function downloadText(fileName: string, text: string, type: string) {
+  const blob = new Blob([text], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadAuditPackage(review: ReviewResult) {
+  downloadText(
+    `${slugify(review.profile.company_name)}-verivc-audit-package.json`,
+    JSON.stringify({ schema_version: "verivc.review.v1", exported_at: new Date().toISOString(), review }, null, 2),
+    "application/json;charset=utf-8",
+  );
+}
+
+function parseStoredReviews(): ReviewResult[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is ReviewResult => Boolean(item && typeof item === "object" && "review_id" in item && "recommendation" in item)).slice(0, 12);
+  } catch {
+    return [];
+  }
+}
+
+function Dashboard({ onDemo, onNew, recent, onOpenReview, onClearReviews }: { onDemo: (index: number) => void; onNew: () => void; recent: ReviewResult[]; onOpenReview: (review: ReviewResult) => void; onClearReviews: () => void }) {
   return (
     <section className="hero-grid" aria-labelledby="hero-title">
       <div className="hero-card">
@@ -108,16 +142,19 @@ function Dashboard({ onDemo, onNew, recent }: { onDemo: (index: number) => void;
         ))}
       </div>
       <div className="recent-card">
-        <div className="section-heading"><span>Recent local reviews</span><small>Stored in this browser session only</small></div>
+        <div className="section-heading"><span>Review library</span><small>Persisted in local browser storage</small></div>
         {recent.length === 0 ? <p className="empty-state">No reviews yet. Start with a demo or create a manual review.</p> : (
-          <div className="recent-list">
-            {recent.map((review) => (
-              <div key={review.review_id} className="recent-row">
-                <span>{review.profile.company_name}</span>
-                <Badge tone={recommendationTone(review.recommendation.state)}>{recommendationLabels[review.recommendation.state]}</Badge>
-              </div>
-            ))}
-          </div>
+          <>
+            <div className="recent-list">
+              {recent.map((review) => (
+                <button key={review.review_id} className="recent-row recent-button" onClick={() => onOpenReview(review)}>
+                  <span><strong>{review.profile.company_name}</strong><small>{new Date(review.created_at).toLocaleString()} · {review.claims.length} claims · {review.evidence.length} evidence items</small></span>
+                  <Badge tone={recommendationTone(review.recommendation.state)}>{recommendationLabels[review.recommendation.state]}</Badge>
+                </button>
+              ))}
+            </div>
+            <button className="ghost-button library-clear" onClick={onClearReviews}>Clear local library</button>
+          </>
         )}
       </div>
     </section>
@@ -154,11 +191,12 @@ function IntakeForm({ initialInput, onCancel, onRun }: { initialInput?: StartupI
           <label>GitHub URL<input value={input.githubUrl} onChange={(e) => set("githubUrl", e.target.value)} placeholder="https://github.com/..." /></label>
           <label>Optional pitch deck PDF<input type="file" accept="application/pdf,.pdf" onChange={(e) => set("deckFileName", e.target.files?.[0]?.name ?? "")} /></label>
         </div>
-        <label>Pitch description<textarea className="large" value={input.pitch} onChange={(e) => set("pitch", e.target.value)} placeholder="Paste the founder pitch, deck text, or application answer." required /></label>
+        <label>Pitch description<textarea className="large" value={input.pitch} onChange={(e) => set("pitch", e.target.value)} placeholder="Paste the founder pitch or application answer." required /></label>
+        <label>Pitch deck text or page excerpts<textarea value={input.deckText} onChange={(e) => set("deckText", e.target.value)} placeholder="Optional: paste extracted deck text with page labels, e.g. Page 5: $14.4K MRR across 8 locations." /></label>
         <label>Pasted evidence and metrics<textarea value={input.pastedEvidence} onChange={(e) => set("pastedEvidence", e.target.value)} placeholder="Paste customer references, Stripe excerpts, GitHub snapshots, market notes, or reviewer observations." /></label>
         <label>Reviewer notes / traction details<textarea value={input.notes} onChange={(e) => set("notes", e.target.value)} placeholder="Add contradictions, caveats, meeting notes, or extra founder claims." /></label>
         <label>Investor thesis or review criteria<textarea value={input.investmentThesis} onChange={(e) => set("investmentThesis", e.target.value)} placeholder="Optional: describe what this fund or judge values." /></label>
-        {input.deckFileName ? <p className="file-note">Captured PDF artifact: <strong>{input.deckFileName}</strong>. Local MVP preserves file provenance; paste key deck text for claim extraction.</p> : null}
+        {input.deckFileName ? <p className="file-note">Captured PDF artifact: <strong>{input.deckFileName}</strong>. Local MVP preserves file provenance; paste key deck text above for claim extraction.</p> : null}
         {error ? <p className="error-note">{error}</p> : null}
         <div className="form-actions"><button type="button" className="secondary-button" onClick={onCancel}>Cancel</button><button type="submit" className="primary-button">Run evidence review</button></div>
       </form>
@@ -225,10 +263,11 @@ function EvidenceMini({ evidence }: { evidence?: Evidence }) {
   return <div className="evidence-mini"><strong>{evidence.evidence_id}: {evidence.title}</strong><p>{evidence.excerpt}</p><small>{evidence.source_type} · reliability {evidence.reliability_level}</small></div>;
 }
 
-function EvidenceVault({ evidence }: { evidence: Evidence[] }) {
+function EvidenceVault({ evidence, onAddEvidence }: { evidence: Evidence[]; onAddEvidence: (evidence: Evidence) => void }) {
   return (
     <section className="workspace-section" aria-labelledby="evidence-title">
       <div className="section-heading"><span id="evidence-title">Evidence vault</span><small>Provenance is preserved; unavailable evidence is explicit</small></div>
+      <ManualEvidenceForm onAddEvidence={onAddEvidence} nextIndex={evidence.length + 1} />
       <div className="evidence-grid">
         {evidence.map((item) => (
           <article className="evidence-card" key={item.evidence_id}>
@@ -245,34 +284,68 @@ function EvidenceVault({ evidence }: { evidence: Evidence[] }) {
   );
 }
 
+function ManualEvidenceForm({ onAddEvidence, nextIndex }: { onAddEvidence: (evidence: Evidence) => void; nextIndex: number }) {
+  const [title, setTitle] = useState("");
+  const [excerpt, setExcerpt] = useState("");
+  const [url, setUrl] = useState("");
+  const [sourceType, setSourceType] = useState<Evidence["source_type"]>("manual_evidence");
+  const [reliability, setReliability] = useState<Evidence["reliability_level"]>("medium");
+  return (
+    <form className="manual-evidence-form" onSubmit={(event) => {
+      event.preventDefault();
+      if (!title.trim() || !excerpt.trim()) return;
+      onAddEvidence({
+        evidence_id: `EV-ADD-${Date.now().toString(36)}-${String(nextIndex).padStart(2, "0")}`,
+        source_type: sourceType,
+        title: title.trim(),
+        url_or_file: url.trim() || undefined,
+        excerpt: excerpt.trim(),
+        captured_at: new Date().toISOString(),
+        reliability_level: reliability,
+        relevance: "high",
+        supports_claim_ids: [],
+        contradicts_claim_ids: [],
+        limitations: ["Reviewer-added evidence after initial analysis; verify source authenticity before relying on it."],
+      });
+      setTitle("");
+      setExcerpt("");
+      setUrl("");
+    }}>
+      <div className="section-heading"><span>Add evidence and rerun</span><small>Manual evidence becomes part of the audit graph</small></div>
+      <div className="manual-evidence-grid">
+        <label>Title<input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Stripe export, customer call, GitHub snapshot..." /></label>
+        <label>Source type<select value={sourceType} onChange={(event) => setSourceType(event.target.value as Evidence["source_type"])}><option value="manual_evidence">manual_evidence</option><option value="financial_document">financial_document</option><option value="customer_reference">customer_reference</option><option value="github">github</option><option value="website">website</option><option value="public_record">public_record</option><option value="deck">deck</option><option value="founder_note">founder_note</option></select></label>
+        <label>Reliability<select value={reliability} onChange={(event) => setReliability(event.target.value as Evidence["reliability_level"])}><option value="primary">primary</option><option value="high">high</option><option value="medium">medium</option><option value="low">low</option><option value="unknown">unknown</option></select></label>
+        <label className="full-span">URL or file reference<input value={url} onChange={(event) => setUrl(event.target.value)} placeholder="Optional source locator" /></label>
+        <label className="full-span">Excerpt<textarea value={excerpt} onChange={(event) => setExcerpt(event.target.value)} placeholder="Paste the exact evidence excerpt. VeriVC will relink claims and update scores." /></label>
+      </div>
+      <button className="primary-button" type="submit">Add evidence + rerun analysis</button>
+    </form>
+  );
+}
+
 function MemoPanel({ review }: { review: ReviewResult }) {
   const [copied, setCopied] = useState(false);
   const downloadMemo = () => {
-    const blob = new Blob([review.memo.markdown], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${review.profile.company_name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-verivc-memo.md`;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadText(`${slugify(review.profile.company_name)}-verivc-memo.md`, review.memo.markdown, "text/markdown;charset=utf-8");
   };
   return (
     <section className="workspace-section" aria-labelledby="memo-title">
       <div className="section-heading"><span id="memo-title">Investment memo</span><small>Markdown export for partner review</small></div>
-      <div className="memo-actions"><button className="secondary-button" onClick={async () => { await navigator.clipboard.writeText(review.memo.markdown); setCopied(true); }}>Copy memo</button><button className="primary-button" onClick={downloadMemo}>Download Markdown</button>{copied ? <Badge tone="green">Copied</Badge> : null}</div>
+      <div className="memo-actions"><button className="secondary-button" onClick={async () => { await navigator.clipboard.writeText(review.memo.markdown); setCopied(true); }}>Copy memo</button><button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button><button className="primary-button" onClick={downloadMemo}>Download Markdown</button>{copied ? <Badge tone="green">Copied</Badge> : null}</div>
       <pre className="memo-box">{review.memo.markdown}</pre>
     </section>
   );
 }
 
-function ReviewWorkspace({ review, onBack, onNew }: { review: ReviewResult; onBack: () => void; onNew: () => void }) {
+function ReviewWorkspace({ review, onBack, onNew, onAddEvidence }: { review: ReviewResult; onBack: () => void; onNew: () => void; onAddEvidence: (evidence: Evidence) => void }) {
   const [tab, setTab] = useState<"overview" | "claims" | "evidence" | "memo">("overview");
   const recTone = recommendationTone(review.recommendation.state);
   return (
     <section className="workspace" aria-labelledby="workspace-title">
       <div className="workspace-top">
         <div><div className="eyebrow">Review workspace</div><h2 id="workspace-title">{review.profile.company_name}</h2><p>{review.profile.tagline}</p></div>
-        <div className="workspace-actions"><button className="ghost-button" onClick={onBack}>Dashboard</button><button className="secondary-button" onClick={onNew}>New Review</button></div>
+        <div className="workspace-actions"><button className="ghost-button" onClick={onBack}>Dashboard</button><button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button><button className="secondary-button" onClick={onNew}>New Review</button></div>
       </div>
       <div className="decision-band">
         <div className="readiness"><span>Readiness score</span><strong>{review.recommendation.readiness_score}</strong><small>/100</small></div>
@@ -286,7 +359,7 @@ function ReviewWorkspace({ review, onBack, onNew }: { review: ReviewResult; onBa
       </nav>
       {tab === "overview" ? <Overview review={review} /> : null}
       {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} /> : null}
-      {tab === "evidence" ? <EvidenceVault evidence={review.evidence} /> : null}
+      {tab === "evidence" ? <EvidenceVault evidence={review.evidence} onAddEvidence={onAddEvidence} /> : null}
       {tab === "memo" ? <MemoPanel review={review} /> : null}
     </section>
   );
@@ -305,24 +378,37 @@ function Overview({ review }: { review: ReviewResult }) {
 }
 
 export default function VeriVCApp() {
-  const [mode, setMode] = useState<"dashboard" | "intake" | "review">("dashboard");
+  const [recent, setRecent] = useState<ReviewResult[]>(() => parseStoredReviews());
+  const [review, setReview] = useState<ReviewResult | undefined>(() => parseStoredReviews()[0]);
+  const [mode, setMode] = useState<"dashboard" | "intake" | "review">(() => (parseStoredReviews()[0] ? "review" : "dashboard"));
   const [draft, setDraft] = useState<StartupInput | undefined>();
-  const [review, setReview] = useState<ReviewResult | undefined>();
-  const [recent, setRecent] = useState<ReviewResult[]>([]);
+
+  useEffect(() => {
+    window.localStorage.setItem(storageKey, JSON.stringify(recent.slice(0, 12)));
+  }, [recent]);
+
+  const saveReview = (result: ReviewResult) => {
+    setReview(result);
+    setRecent((items) => [result, ...items.filter((item) => item.review_id !== result.review_id)].slice(0, 12));
+    setMode("review");
+  };
 
   const run = (input: StartupInput, evidence = [] as Evidence[]) => {
     const result = runReview(input, evidence);
-    setReview(result);
-    setRecent((items) => [result, ...items.filter((item) => item.review_id !== result.review_id)].slice(0, 5));
-    setMode("review");
+    saveReview(result);
+  };
+
+  const addEvidenceToCurrentReview = (evidence: Evidence) => {
+    if (!review) return;
+    saveReview(runReviewWithEvidencePacket(review.input, [...review.evidence, evidence]));
   };
 
   return (
     <main className="app-shell">
       <header className="topbar"><button className="brand" onClick={() => setMode("dashboard")} aria-label="Go to VeriVC dashboard"><span>V</span><strong>VeriVC</strong></button><div className="topbar-note">Evidence-driven AI startup due-diligence copilot</div></header>
-      {mode === "dashboard" ? <Dashboard recent={recent} onNew={() => { setDraft(undefined); setMode("intake"); }} onDemo={(index) => { const demo = demoCompanies[index]; setDraft(demo.input); run(demo.input, demo.evidence); }} /> : null}
+      {mode === "dashboard" ? <Dashboard recent={recent} onOpenReview={(item) => { setReview(item); setMode("review"); }} onClearReviews={() => { setRecent([]); setReview(undefined); }} onNew={() => { setDraft(undefined); setMode("intake"); }} onDemo={(index) => { const demo = demoCompanies[index]; setDraft(demo.input); run(demo.input, demo.evidence); }} /> : null}
       {mode === "intake" ? <IntakeForm initialInput={draft} onCancel={() => setMode("dashboard")} onRun={(input) => run(input)} /> : null}
-      {mode === "review" && review ? <ReviewWorkspace review={review} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
+      {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
     </main>
   );
 }

@@ -101,3 +101,21 @@ Every review includes a provenance log stating where data came from and how it w
 ## Export flow
 
 The memo is generated as Markdown in `buildMemo`. The UI supports copying to clipboard or downloading a `.md` file for partner review.
+
+## Second-iteration workflow additions
+
+### Local review library
+
+The client stores recent `ReviewResult` objects in browser `localStorage` under `verivc.reviews.v2`. This is intentionally local-only persistence for hackathon reliability and avoids user accounts, backend storage, and sensitive multi-tenant data concerns.
+
+### Reviewer-added evidence
+
+The Evidence Vault now includes a manual evidence form. A reviewer can add a source type, reliability level, source locator, title, and exact excerpt. The app calls `runReviewWithEvidencePacket`, which relinks claims against the complete evidence packet and regenerates scores, findings, questions, recommendation, and memo.
+
+### Audit package export
+
+The UI can export a JSON audit package with schema version, export timestamp, and the complete review graph. This is designed for partner review, debugging, or future import support.
+
+### Deck text handling
+
+`StartupInput.deckText` captures pasted or extracted deck text. The engine treats it as both a claim source and a deck evidence artifact, while the PDF filename remains preserved separately. This avoids pretending that an uploaded PDF has been parsed when only the filename is available.

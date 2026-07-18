@@ -76,3 +76,16 @@ Show:
 End with:
 
 > VeriVC helps investors review faster without confusing confident language with verified evidence.
+
+## 10. Second-iteration add-on demo
+
+After showing the evidence vault, add a new manual evidence item:
+
+- Title: `Updated Stripe export`
+- Source type: `financial_document`
+- Reliability: `primary`
+- Excerpt: `Updated Stripe export confirms $31K MRR across six paying customers; 17 pilots remain unpaid.`
+
+Click **Add evidence + rerun analysis** and show that VeriVC relinks the graph instead of appending an untraceable note.
+
+Then click **Export audit JSON** to show the full review package, and return to the dashboard to show the local review library.

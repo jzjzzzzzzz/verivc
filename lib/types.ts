@@ -87,6 +87,7 @@ export interface StartupInput {
   notes?: string;
   pastedEvidence?: string;
   deckFileName?: string;
+  deckText?: string;
 }
 
 export interface StartupProfile {
