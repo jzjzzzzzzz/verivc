@@ -12,12 +12,13 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "typecheck": "tsc --noEmit",
     "format:check": "node scripts/check-format.mjs",
-    "test": "node --import tsx --test tests/engine.test.mjs",
+    "test": "node --import tsx --test tests/*.test.mjs",
     "test:rendered": "npm run build && node --test tests/rendered-html.test.mjs"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
     "next": "16.2.6",
+    "pdfjs-dist": "^6.1.200",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },
