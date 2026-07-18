@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { demoCompanies } from "../lib/demoData.ts";
 import { auditPackageFileName, parseAuditPackageJson, serializeAuditPackage } from "../lib/auditPackage.ts";
+import { getScoringProfile, summarizeWeightedRecommendation, weightedScore } from "../lib/scoringProfiles.ts";
 import { associateEvidence, buildEvidenceFromInput, extractClaims, runReview, runReviewWithEvidencePacket, selectRecommendation } from "../lib/engine.ts";
 import { assertReviewResult, recommendationStates } from "../lib/types.ts";
 
@@ -126,4 +127,22 @@ test("audit package import rejects malformed or unsupported packages", () => {
   assert.throws(() => parseAuditPackageJson("not json"), /not valid JSON/);
   assert.throws(() => parseAuditPackageJson(JSON.stringify({ schema_version: "other", exported_at: "now", review: {} })), /Unsupported audit package schema/);
   assert.throws(() => parseAuditPackageJson(JSON.stringify({ schema_version: "verivc.review.v1", exported_at: "now" })), /missing review payload/);
+});
+
+
+test("scoring profiles produce explainable weighted readiness", () => {
+  const review = runReview(demoCompanies[1].input, demoCompanies[1].evidence);
+  const aiSeed = getScoringProfile("ai_seed");
+  const summary = summarizeWeightedRecommendation(review, aiSeed);
+  assert.equal(summary.profile_id, "ai_seed");
+  assert.equal(summary.weighted_readiness_score, weightedScore(review.evaluations, aiSeed));
+  assert.ok(summary.top_positive_weighted_dimensions.length === 3);
+  assert.ok(summary.top_negative_weighted_dimensions.length === 3);
+  assert.match(summary.explanation, /weighted score/);
+});
+
+test("profile must-have gaps are surfaced", () => {
+  const review = runReview(demoCompanies[0].input, demoCompanies[0].evidence);
+  const summary = summarizeWeightedRecommendation(review, getScoringProfile("ai_seed"));
+  assert.ok(summary.must_have_gaps.some((gap) => gap.dimension === "defensibility" || gap.dimension === "technical_credibility"));
 });
