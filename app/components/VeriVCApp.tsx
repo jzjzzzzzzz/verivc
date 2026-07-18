@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { demoCompanies } from "@/lib/demoData";
 import { runReview, runReviewWithEvidencePacket } from "@/lib/engine";
 import { auditPackageFileName, parseAuditPackageJson, serializeAuditPackage } from "@/lib/auditPackage";
+import { getScoringProfile, scoringProfiles, summarizeWeightedRecommendation, type ScoringProfileId } from "@/lib/scoringProfiles";
 import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -370,6 +371,9 @@ function MemoPanel({ review }: { review: ReviewResult }) {
 
 function ReviewWorkspace({ review, onBack, onNew, onAddEvidence }: { review: ReviewResult; onBack: () => void; onNew: () => void; onAddEvidence: (evidence: Evidence) => void }) {
   const [tab, setTab] = useState<"overview" | "claims" | "evidence" | "memo">("overview");
+  const [profileId, setProfileId] = useState<ScoringProfileId>("balanced");
+  const scoringProfile = getScoringProfile(profileId);
+  const weightedSummary = summarizeWeightedRecommendation(review, scoringProfile);
   const recTone = recommendationTone(review.recommendation.state);
   return (
     <section className="workspace" aria-labelledby="workspace-title">
@@ -378,10 +382,11 @@ function ReviewWorkspace({ review, onBack, onNew, onAddEvidence }: { review: Rev
         <div className="workspace-actions"><button className="ghost-button" onClick={onBack}>Dashboard</button><button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button><button className="secondary-button" onClick={onNew}>New Review</button></div>
       </div>
       <div className="decision-band">
-        <div className="readiness"><span>Readiness score</span><strong>{review.recommendation.readiness_score}</strong><small>/100</small></div>
-        <div><Badge tone={recTone}>{recommendationLabels[review.recommendation.state]}</Badge><p>{review.recommendation.reasons.join(" ")}</p></div>
+        <div className="readiness"><span>Readiness score</span><strong>{weightedSummary.weighted_readiness_score}</strong><small>/100 weighted</small></div>
+        <div><Badge tone={recTone}>{recommendationLabels[review.recommendation.state]}</Badge><p>{weightedSummary.explanation} Base recommendation remains {review.recommendation.state}.</p></div>
         <div><Badge tone={review.recommendation.confidence === "high" ? "green" : review.recommendation.confidence === "medium" ? "blue" : "amber"}>{review.recommendation.confidence} confidence</Badge><p>{review.recommendation.human_review_note}</p></div>
       </div>
+      <ScoringProfilePanel profileId={profileId} onProfileChange={setProfileId} summary={weightedSummary} />
       <nav className="tabs" aria-label="Review sections">
         {[
           ["overview", "Overview"], ["claims", "Claims"], ["evidence", "Evidence"], ["memo", "Memo"],
@@ -391,6 +396,40 @@ function ReviewWorkspace({ review, onBack, onNew, onAddEvidence }: { review: Rev
       {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} /> : null}
       {tab === "evidence" ? <EvidenceVault evidence={review.evidence} onAddEvidence={onAddEvidence} /> : null}
       {tab === "memo" ? <MemoPanel review={review} /> : null}
+    </section>
+  );
+}
+
+function ScoringProfilePanel({
+  profileId,
+  onProfileChange,
+  summary,
+}: {
+  profileId: ScoringProfileId;
+  onProfileChange: (id: ScoringProfileId) => void;
+  summary: ReturnType<typeof summarizeWeightedRecommendation>;
+}) {
+  const selected = scoringProfiles.find((profile) => profile.id === profileId) ?? scoringProfiles[0];
+  return (
+    <section className="profile-panel" aria-labelledby="profile-title">
+      <div>
+        <div className="section-heading compact-heading"><span id="profile-title">Fund scoring profile</span><small>Weights alter readiness score, not the underlying evidence graph</small></div>
+        <label className="profile-select">Profile<select value={profileId} onChange={(event) => onProfileChange(event.target.value as ScoringProfileId)}>{scoringProfiles.map((profile) => <option key={profile.id} value={profile.id}>{profile.name}</option>)}</select></label>
+        <p>{selected.description}</p>
+      </div>
+      <div className="profile-score-card">
+        <span>Weighted delta</span>
+        <strong className={summary.delta >= 0 ? "score-good" : "score-low"}>{summary.delta >= 0 ? "+" : ""}{summary.delta}</strong>
+        <small>Base {summary.base_readiness_score}/100 → weighted {summary.weighted_readiness_score}/100</small>
+      </div>
+      <div className="profile-contributions">
+        <strong>Top weighted positives</strong>
+        {summary.top_positive_weighted_dimensions.map((item) => <span key={item.dimension}>{item.dimension.replaceAll("_", " ")} · {item.score} × {item.weight}</span>)}
+      </div>
+      <div className="profile-contributions negative-profile">
+        <strong>Must-have gaps</strong>
+        {summary.must_have_gaps.length ? summary.must_have_gaps.map((gap) => <span key={gap.dimension}>{gap.dimension.replaceAll("_", " ")} below {gap.threshold}: {gap.score}</span>) : <span>No must-have gaps below threshold.</span>}
+      </div>
     </section>
   );
 }
