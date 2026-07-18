@@ -11,7 +11,7 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 ## MVP workflow
 
 1. Create review.
-2. Enter company details, pitch, URLs, notes, optional PDF artifact, evidence, and thesis.
+2. Enter company details, pitch, URLs, notes, optional pitch deck PDF, evidence, and thesis.
 3. Extract structured startup profile and typed claims.
 4. Link claims to evidence and contradictions.
 5. Score diligence categories with visible rules.
@@ -54,3 +54,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added fund-specific scoring profiles with explicit dimension weights.
 - Added weighted readiness score, weighted delta, top positives, and must-have gaps to the workspace.
 - Added selected scoring profile view to memo copy/download output.
+
+## Fifth-iteration requirements completed
+
+- Added browser-side PDF pitch deck text extraction.
+- Added page-labelled deck text formatting and page-level claim source references.
+- Added PDF validation, filename sanitization, extraction status, truncation handling, and fallback to pasted excerpts.

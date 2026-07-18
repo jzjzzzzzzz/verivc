@@ -98,7 +98,11 @@ Then click **Export audit JSON** to show the full review package, and return to 
 4. Show that the review reopens with claims, evidence, recommendation, and memo intact.
 5. Explain that this is useful for partner review handoff and later audit replay.
 
-## 12. Fund profile weighting
+## 12. PDF deck extraction
+
+Click **New Review**, choose a text-based PDF pitch deck, and show the extraction status. Point out that the deck text field is filled with `Page N:` excerpts, then run the review and open a deck-sourced claim to show a source reference such as `Pitch deck page 6`. Explain that scanned decks still require pasted excerpts or primary documents.
+
+## 13. Fund profile weighting
 
 Open GrainLoop, then switch the **Fund scoring profile** selector between:
 

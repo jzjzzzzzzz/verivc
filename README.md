@@ -6,7 +6,7 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 
 ## What it does
 
-- Creates a startup review from company name, website, GitHub URL, pitch, sector, stage, optional PDF filename, pasted evidence, notes, and review criteria.
+- Creates a startup review from company name, website, GitHub URL, pitch, sector, stage, optional pitch deck PDF, pasted evidence, notes, and review criteria.
 - Extracts structured startup claims into typed claim records.
 - Links claims to evidence as supported, partially supported, contradicted, insufficient, or unverifiable.
 - Detects contradictions and gaps such as unsupported rapid growth, weak market sizing, “no competitors” conflicts, and production-readiness claims without technical proof.
@@ -79,6 +79,7 @@ npm run test:rendered  # build + server-render smoke test
 - `lib/demoData.ts` — deterministic demo company fixtures and evidence packets.
 - `lib/engine.ts` — claim extraction, evidence association, contradiction detection, scoring, recommendation logic, and memo generation.
 - `lib/llm.ts` — OpenAI-compatible provider abstraction with mock/provider-unavailable behavior.
+- `lib/pdfExtraction.ts` — browser-side PDF upload validation, local text extraction, page-label formatting, truncation handling, and filename sanitization.
 - `app/components/VeriVCApp.tsx` — local review workflow, dashboard, intake, claim-evidence explorer, evidence vault, scorecards, questions, and memo export.
 
 ## Privacy and safety notes
@@ -92,7 +93,7 @@ npm run test:rendered  # build + server-render smoke test
 
 ## Known limitations
 
-- PDF upload currently records the file name as an evidence artifact; paste deck text for claim extraction in this MVP.
+- PDF upload now extracts text locally in the browser for text-based PDFs and creates `Page N:` references; scanned/image-only decks, complex tables, charts, and speaker notes may still require pasted excerpts or primary documents.
 - Website and GitHub URLs are captured for provenance, but live scraping is intentionally not required for deterministic demo reliability.
 - Scoring is heuristic and explainable, not statistically calibrated.
 - LLM integration is abstracted but not required for the core local demo.
@@ -104,7 +105,7 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 
 ## Future roadmap
 
-- Page-level PDF text extraction with source citations.
+- OCR for scanned pitch decks and richer PDF table/chart extraction.
 - Optional public website/GitHub enrichment with caching, timeouts, and source snapshots.
 - Reviewer-editable claim/evidence graph and manual evidence uploads.
 - Calibrated fund-specific scoring profiles.
@@ -128,3 +129,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Fund scoring profiles:** choose Balanced early-stage, AI seed fund, B2B SaaS accelerator, or Technical angel weighting in the review workspace.
 - **Weighted readiness:** VeriVC now shows base readiness alongside fund-weighted readiness, weighted delta, top weighted positives, and must-have gaps.
 - **Profile-aware memo export:** copied/downloaded memos include the selected fund scoring profile view without changing the underlying evidence graph.
+
+## Added in the fifth iteration
+
+- **Local PDF extraction:** uploading a text-based PDF pitch deck extracts page-labelled text directly in the browser.
+- **Page-level claim provenance:** extracted deck claims now use references such as `Pitch deck page 6` in the claim explorer and memo evidence flow.
+- **Defensive upload handling:** PDF validation enforces type and size limits, sanitizes filenames, truncates very long decks, and falls back to pasted text when extraction fails.

@@ -2,7 +2,7 @@
 
 ## Intake
 
-The client captures company details, website URL, GitHub URL, short pitch, sector, stage, optional deck filename, pasted evidence, notes, and investor thesis. The MVP runs locally in the browser and does not require authentication or a hosted database.
+The client captures company details, website URL, GitHub URL, short pitch, sector, stage, optional pitch deck PDF, pasted evidence, notes, and investor thesis. The MVP runs locally in the browser and does not require authentication or a hosted database.
 
 ## Domain model
 
@@ -42,7 +42,7 @@ Evidence preserves provenance:
 - linked support/contradiction claim IDs
 - limitations
 
-The system never invents missing evidence. Website/GitHub URLs and PDF filenames are captured as provenance artifacts unless an enrichment/extraction provider is explicitly added.
+The system never invents missing evidence. Website/GitHub URLs are captured as provenance artifacts. Text-based PDF pitch decks can be extracted locally in the browser; if extraction fails, the filename remains preserved and missing deck text is explicit.
 
 ## Evidence association
 
@@ -118,7 +118,7 @@ The UI can export a JSON audit package with schema version, export timestamp, an
 
 ### Deck text handling
 
-`StartupInput.deckText` captures pasted or extracted deck text. The engine treats it as both a claim source and a deck evidence artifact, while the PDF filename remains preserved separately. This avoids pretending that an uploaded PDF has been parsed when only the filename is available.
+`StartupInput.deckText` captures pasted or locally extracted deck text. `lib/pdfExtraction.ts` validates PDF type/size, sanitizes filenames, extracts text in the browser via `pdfjs-dist`, formats excerpts as `Page N: ...`, truncates overly long decks, and returns clear extraction errors. The engine splits page-labelled deck text into claim sources such as `Pitch deck page 6`, while the PDF filename remains preserved separately as an artifact. If no text is available, VeriVC creates an explicit unverifiable deck-artifact claim rather than pretending the PDF was parsed.
 
 ## Third-iteration audit import
 
@@ -141,3 +141,7 @@ The UI can export a JSON audit package with schema version, export timestamp, an
 - must-have gaps below threshold
 
 This keeps fund-thesis customization explainable while preserving the evidence-first review graph.
+
+## Fifth-iteration PDF extraction
+
+PDF extraction is intentionally client-side and local for hackathon reliability. The UI disables the file control while extraction is running, reports processed pages and character count, writes extracted text into the editable deck text field, and keeps manual pasted excerpts as a fallback. The extraction layer does not execute embedded PDF content and does not claim OCR coverage for scanned/image-only decks.
