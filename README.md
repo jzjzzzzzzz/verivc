@@ -122,3 +122,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Audit package import:** choose a previously exported VeriVC JSON package from the dashboard and reopen the full review graph.
 - **Import validation:** imported files must match the `verivc.review.v1` schema and pass review-result validation before entering the review library.
 - **Round-trip workflow:** reviewers can export an audit package, share it locally, import it later, add evidence, and rerun the analysis.
+
+## Added in the fourth iteration
+
+- **Fund scoring profiles:** choose Balanced early-stage, AI seed fund, B2B SaaS accelerator, or Technical angel weighting in the review workspace.
+- **Weighted readiness:** VeriVC now shows base readiness alongside fund-weighted readiness, weighted delta, top weighted positives, and must-have gaps.
+- **Profile-aware memo export:** copied/downloaded memos include the selected fund scoring profile view without changing the underlying evidence graph.

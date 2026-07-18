@@ -129,3 +129,15 @@ The UI can export a JSON audit package with schema version, export timestamp, an
 - `review`
 
 `parseAuditPackageJson` rejects malformed JSON, unsupported schema versions, missing review payloads, invalid recommendation states, invalid claim statuses, and out-of-range scores. The dashboard import UI only saves the review after validation succeeds.
+
+## Fourth-iteration fund scoring profiles
+
+`lib/scoringProfiles.ts` adds profile-specific dimension weights on top of the original deterministic category evaluations. The underlying claim statuses, evidence links, contradictions, and base recommendation do not change. The profile layer calculates:
+
+- weighted readiness score
+- delta versus base readiness
+- top weighted positive dimensions
+- lowest weighted contributions
+- must-have gaps below threshold
+
+This keeps fund-thesis customization explainable while preserving the evidence-first review graph.

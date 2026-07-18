@@ -87,6 +87,16 @@ function downloadText(fileName: string, text: string, type: string) {
 function downloadAuditPackage(review: ReviewResult) {
   downloadText(auditPackageFileName(review), serializeAuditPackage(review), "application/json;charset=utf-8");
 }
+function profileMemoAddendum(summary: ReturnType<typeof summarizeWeightedRecommendation>) {
+  const gaps = summary.must_have_gaps.length
+    ? summary.must_have_gaps.map((gap) => `- ${gap.dimension.replaceAll("_", " ")}: ${gap.score}/100 below threshold ${gap.threshold}`).join("\n")
+    : "- No must-have gaps below threshold.";
+  const positives = summary.top_positive_weighted_dimensions
+    .map((item) => `- ${item.dimension.replaceAll("_", " ")}: score ${item.score}, weight ${item.weight}, contribution ${item.contribution}`)
+    .join("\n");
+  return `\n## Fund Scoring Profile View\nProfile: ${summary.profile_name}\n\n${summary.explanation}\n\n### Top Weighted Positives\n${positives}\n\n### Must-Have Gaps\n${gaps}\n`;
+}
+
 
 function parseStoredReviews(): ReviewResult[] {
   if (typeof window === "undefined") return [];
@@ -355,16 +365,16 @@ function ManualEvidenceForm({ onAddEvidence, nextIndex }: { onAddEvidence: (evid
   );
 }
 
-function MemoPanel({ review }: { review: ReviewResult }) {
+function MemoPanel({ review, weightedSummary }: { review: ReviewResult; weightedSummary: ReturnType<typeof summarizeWeightedRecommendation> }) {
   const [copied, setCopied] = useState(false);
   const downloadMemo = () => {
-    downloadText(`${review.profile.company_name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-verivc-memo.md`, review.memo.markdown, "text/markdown;charset=utf-8");
+    downloadText(`${review.profile.company_name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-verivc-memo.md`, review.memo.markdown + profileMemoAddendum(weightedSummary), "text/markdown;charset=utf-8");
   };
   return (
     <section className="workspace-section" aria-labelledby="memo-title">
-      <div className="section-heading"><span id="memo-title">Investment memo</span><small>Markdown export for partner review</small></div>
-      <div className="memo-actions"><button className="secondary-button" onClick={async () => { await navigator.clipboard.writeText(review.memo.markdown); setCopied(true); }}>Copy memo</button><button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button><button className="primary-button" onClick={downloadMemo}>Download Markdown</button>{copied ? <Badge tone="green">Copied</Badge> : null}</div>
-      <pre className="memo-box">{review.memo.markdown}</pre>
+      <div className="section-heading"><span id="memo-title">Investment memo</span><small>Markdown export includes selected fund scoring profile</small></div>
+      <div className="memo-actions"><button className="secondary-button" onClick={async () => { await navigator.clipboard.writeText(review.memo.markdown + profileMemoAddendum(weightedSummary)); setCopied(true); }}>Copy memo</button><button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button><button className="primary-button" onClick={downloadMemo}>Download Markdown</button>{copied ? <Badge tone="green">Copied</Badge> : null}</div>
+      <pre className="memo-box">{review.memo.markdown + profileMemoAddendum(weightedSummary)}</pre>
     </section>
   );
 }
@@ -395,7 +405,7 @@ function ReviewWorkspace({ review, onBack, onNew, onAddEvidence }: { review: Rev
       {tab === "overview" ? <Overview review={review} /> : null}
       {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} /> : null}
       {tab === "evidence" ? <EvidenceVault evidence={review.evidence} onAddEvidence={onAddEvidence} /> : null}
-      {tab === "memo" ? <MemoPanel review={review} /> : null}
+      {tab === "memo" ? <MemoPanel review={review} weightedSummary={weightedSummary} /> : null}
     </section>
   );
 }

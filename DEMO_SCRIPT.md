@@ -97,3 +97,13 @@ Then click **Export audit JSON** to show the full review package, and return to 
 3. In **Review library**, click **Choose JSON** and select the exported file.
 4. Show that the review reopens with claims, evidence, recommendation, and memo intact.
 5. Explain that this is useful for partner review handoff and later audit replay.
+
+## 12. Fund profile weighting
+
+Open GrainLoop, then switch the **Fund scoring profile** selector between:
+
+- Balanced early-stage
+- B2B SaaS accelerator
+- Technical angel
+
+Show that the readiness score and weighted positives change, but the claim-evidence graph and base recommendation remain traceable. Open the memo and point out the appended fund scoring profile section.

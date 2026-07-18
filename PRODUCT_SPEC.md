@@ -48,3 +48,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Exported audit packages can be imported from the dashboard.
 - Import path validates schema version and review shape before adding to the local review library.
 - Export/import enables an offline handoff loop for judges or investment partners.
+
+## Fourth-iteration requirements completed
+
+- Added fund-specific scoring profiles with explicit dimension weights.
+- Added weighted readiness score, weighted delta, top positives, and must-have gaps to the workspace.
+- Added selected scoring profile view to memo copy/download output.

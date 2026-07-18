@@ -24,3 +24,8 @@
 
 - Audit package import validates structure but does not cryptographically verify provenance or detect tampering.
 - Imported JSON should be treated as sensitive and only loaded from trusted local sources.
+
+## Fourth-iteration limitations
+
+- Fund scoring profiles are heuristic weights, not calibrated investment outcomes.
+- Profile-weighted readiness changes emphasis but does not override unresolved contradictions, legal review, or human judgment.
