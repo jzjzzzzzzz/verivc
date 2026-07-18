@@ -168,6 +168,21 @@ export function buildEvidenceFromInput(input: StartupInput, provided: Evidence[]
       limitations: ["Deck text is user-provided or locally extracted; important factual claims still require primary evidence."],
     });
   }
+  if (input.githubSnapshot?.trim()) {
+    evidence.push({
+      evidence_id: `EV-GHSNAP-${String(evidence.length + 1).padStart(3, "0")}`,
+      source_type: "github",
+      title: "Public GitHub repository snapshot",
+      url_or_file: input.githubUrl,
+      excerpt: input.githubSnapshot.trim().slice(0, 1800),
+      captured_at: now,
+      reliability_level: "medium",
+      relevance: "high",
+      supports_claim_ids: [],
+      contradicts_claim_ids: [],
+      limitations: ["Public GitHub API snapshot; repository metrics do not prove product quality, security, ownership, or production readiness."],
+    });
+  }
   if (input.pastedEvidence?.trim()) {
     evidence.push({
       evidence_id: `EV-USR-${String(evidence.length + 1).padStart(3, "0")}`,
@@ -203,7 +218,9 @@ export function buildEvidenceFromInput(input: StartupInput, provided: Evidence[]
       source_type: "github",
       title: "GitHub URL captured",
       url_or_file: input.githubUrl,
-      excerpt: `GitHub URL captured for optional technical diligence: ${input.githubUrl}. Public metrics are not fetched in offline demo mode.`,
+      excerpt: input.githubSnapshot?.trim()
+        ? `GitHub URL captured for follow-up review: ${input.githubUrl}. Public snapshot evidence is stored separately.`
+        : `GitHub URL captured for optional technical diligence: ${input.githubUrl}. Public metrics were not fetched or were unavailable.`,
       captured_at: now,
       reliability_level: "low",
       relevance: "medium",

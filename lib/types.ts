@@ -80,6 +80,7 @@ export interface StartupInput {
   companyName: string;
   websiteUrl?: string;
   githubUrl?: string;
+  githubSnapshot?: string;
   pitch: string;
   sector: string;
   stage: string;

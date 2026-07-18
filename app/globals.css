@@ -91,7 +91,10 @@ h3 { font-size: 1.02rem; letter-spacing: -0.02em; }
 .intake-shell { padding: clamp(22px, 4vw, 44px); }
 .intake-form { display: grid; gap: 16px; }
 .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
-label { display: grid; gap: 7px; color: #2f3542; font-weight: 720; }
+label, .form-action-field { display: grid; gap: 7px; color: #2f3542; font-weight: 720; }
+.form-action-field { align-content: end; }
+.form-action-field .secondary-button { width: 100%; justify-content: center; }
+button:disabled, input:disabled { opacity: .62; cursor: not-allowed; transform: none; }
 input, textarea, select { width: 100%; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.78); color: var(--ink); padding: 12px 13px; outline: none; }
 input:focus, textarea:focus, select:focus { border-color: rgba(49, 87, 216, .55); box-shadow: 0 0 0 4px rgba(49, 87, 216, .1); }
 textarea { min-height: 110px; resize: vertical; }

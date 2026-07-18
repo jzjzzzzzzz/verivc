@@ -113,6 +113,22 @@ test("review can be rerun with a reviewer-added evidence packet", () => {
 });
 
 
+test("GitHub public snapshot becomes technical evidence", () => {
+  const review = runReview({
+    companyName: "RepoCo",
+    sector: "Developer Tools",
+    stage: "Seed",
+    githubUrl: "https://github.com/acme/repoco",
+    pitch: "RepoCo has a production-ready GitHub repository with tests and active commits.",
+    githubSnapshot: "GitHub public snapshot for acme/repoco captured at 2026-07-19T00:00:00.000Z. Stars: 42. Forks: 6. README: present. License: MIT. Recent commit: 2026-07-18 by Dana: Add tests. Limitations: Metrics do not prove quality.",
+  });
+  const snapshot = review.evidence.find((item) => item.evidence_id.startsWith("EV-GHSNAP"));
+  assert.ok(snapshot);
+  assert.equal(snapshot.source_type, "github");
+  assert.ok(review.claims.some((claim) => claim.category === "technology"));
+});
+
+
 test("audit package serializes and validates review imports", () => {
   const review = runReview(demoCompanies[1].input, demoCompanies[1].evidence);
   const serialized = serializeAuditPackage(review);
