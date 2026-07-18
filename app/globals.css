@@ -189,3 +189,48 @@ blockquote { margin: 0; padding: 12px; border-left: 3px solid var(--blue); backg
     grid-template-columns: 1fr;
   }
 }
+
+.audit-import-panel {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 14px;
+  border: 1px solid rgba(18, 128, 92, 0.18);
+  border-radius: 18px;
+  background: rgba(18, 128, 92, 0.07);
+}
+
+.audit-import-panel p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.import-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  padding: 10px 14px;
+  background: #ffffff;
+  color: #111827;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.import-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  .audit-import-panel {
+    grid-template-columns: 1fr;
+  }
+}

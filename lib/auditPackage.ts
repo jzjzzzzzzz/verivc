@@ -53,6 +53,6 @@ export function parseAuditPackageJson(text: string): AuditPackage {
   return {
     schema_version: auditPackageSchemaVersion,
     exported_at: parsed.exported_at,
-    review: assertReviewResult(parsed.review as ReviewResult),
+    review: assertReviewResult(parsed.review as unknown as ReviewResult),
   };
 }

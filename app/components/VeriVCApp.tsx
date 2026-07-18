@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { demoCompanies } from "@/lib/demoData";
-import { runReview, runReviewWithEvidencePacket, slugify } from "@/lib/engine";
+import { runReview, runReviewWithEvidencePacket } from "@/lib/engine";
+import { auditPackageFileName, parseAuditPackageJson, serializeAuditPackage } from "@/lib/auditPackage";
 import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -83,11 +84,7 @@ function downloadText(fileName: string, text: string, type: string) {
 }
 
 function downloadAuditPackage(review: ReviewResult) {
-  downloadText(
-    `${slugify(review.profile.company_name)}-verivc-audit-package.json`,
-    JSON.stringify({ schema_version: "verivc.review.v1", exported_at: new Date().toISOString(), review }, null, 2),
-    "application/json;charset=utf-8",
-  );
+  downloadText(auditPackageFileName(review), serializeAuditPackage(review), "application/json;charset=utf-8");
 }
 
 function parseStoredReviews(): ReviewResult[] {
@@ -103,7 +100,7 @@ function parseStoredReviews(): ReviewResult[] {
   }
 }
 
-function Dashboard({ onDemo, onNew, recent, onOpenReview, onClearReviews }: { onDemo: (index: number) => void; onNew: () => void; recent: ReviewResult[]; onOpenReview: (review: ReviewResult) => void; onClearReviews: () => void }) {
+function Dashboard({ onDemo, onNew, recent, onOpenReview, onClearReviews, onImportReview }: { onDemo: (index: number) => void; onNew: () => void; recent: ReviewResult[]; onOpenReview: (review: ReviewResult) => void; onClearReviews: () => void; onImportReview: (review: ReviewResult) => void }) {
   return (
     <section className="hero-grid" aria-labelledby="hero-title">
       <div className="hero-card">
@@ -143,6 +140,7 @@ function Dashboard({ onDemo, onNew, recent, onOpenReview, onClearReviews }: { on
       </div>
       <div className="recent-card">
         <div className="section-heading"><span>Review library</span><small>Persisted in local browser storage</small></div>
+        <AuditImportPanel onImportReview={onImportReview} />
         {recent.length === 0 ? <p className="empty-state">No reviews yet. Start with a demo or create a manual review.</p> : (
           <>
             <div className="recent-list">
@@ -158,6 +156,38 @@ function Dashboard({ onDemo, onNew, recent, onOpenReview, onClearReviews }: { on
         )}
       </div>
     </section>
+  );
+}
+
+function AuditImportPanel({ onImportReview }: { onImportReview: (review: ReviewResult) => void }) {
+  const [message, setMessage] = useState<{ tone: "green" | "red"; text: string }>();
+  return (
+    <div className="audit-import-panel">
+      <div>
+        <strong>Import audit package</strong>
+        <p>Reopen a VeriVC JSON export with claims, evidence, memo, and provenance intact.</p>
+      </div>
+      <label className="import-button">
+        <input
+          type="file"
+          accept="application/json,.json"
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            event.currentTarget.value = "";
+            if (!file) return;
+            try {
+              const imported = parseAuditPackageJson(await file.text());
+              onImportReview(imported.review);
+              setMessage({ tone: "green", text: `Imported ${imported.review.profile.company_name} from ${imported.schema_version}.` });
+            } catch (error) {
+              setMessage({ tone: "red", text: error instanceof Error ? error.message : "Unable to import audit package." });
+            }
+          }}
+        />
+        Choose JSON
+      </label>
+      {message ? <Badge tone={message.tone}>{message.text}</Badge> : null}
+    </div>
   );
 }
 
@@ -327,7 +357,7 @@ function ManualEvidenceForm({ onAddEvidence, nextIndex }: { onAddEvidence: (evid
 function MemoPanel({ review }: { review: ReviewResult }) {
   const [copied, setCopied] = useState(false);
   const downloadMemo = () => {
-    downloadText(`${slugify(review.profile.company_name)}-verivc-memo.md`, review.memo.markdown, "text/markdown;charset=utf-8");
+    downloadText(`${review.profile.company_name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-verivc-memo.md`, review.memo.markdown, "text/markdown;charset=utf-8");
   };
   return (
     <section className="workspace-section" aria-labelledby="memo-title">
@@ -406,7 +436,7 @@ export default function VeriVCApp() {
   return (
     <main className="app-shell">
       <header className="topbar"><button className="brand" onClick={() => setMode("dashboard")} aria-label="Go to VeriVC dashboard"><span>V</span><strong>VeriVC</strong></button><div className="topbar-note">Evidence-driven AI startup due-diligence copilot</div></header>
-      {mode === "dashboard" ? <Dashboard recent={recent} onOpenReview={(item) => { setReview(item); setMode("review"); }} onClearReviews={() => { setRecent([]); setReview(undefined); }} onNew={() => { setDraft(undefined); setMode("intake"); }} onDemo={(index) => { const demo = demoCompanies[index]; setDraft(demo.input); run(demo.input, demo.evidence); }} /> : null}
+      {mode === "dashboard" ? <Dashboard recent={recent} onOpenReview={(item) => { setReview(item); setMode("review"); }} onClearReviews={() => { setRecent([]); setReview(undefined); }} onImportReview={(item) => saveReview(item)} onNew={() => { setDraft(undefined); setMode("intake"); }} onDemo={(index) => { const demo = demoCompanies[index]; setDraft(demo.input); run(demo.input, demo.evidence); }} /> : null}
       {mode === "intake" ? <IntakeForm initialInput={draft} onCancel={() => setMode("dashboard")} onRun={(input) => run(input)} /> : null}
       {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
     </main>
