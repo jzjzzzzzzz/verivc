@@ -1,0 +1,36 @@
+# VeriVC Product Spec
+
+## Product statement
+
+Most AI investment tools generate opinions. VeriVC verifies the evidence behind them.
+
+## Primary user
+
+Early-stage VC, accelerator reviewer, angel investor, or startup competition judge who needs fast but traceable diligence.
+
+## MVP workflow
+
+1. Create review.
+2. Enter company details, pitch, URLs, notes, optional PDF artifact, evidence, and thesis.
+3. Extract structured startup profile and typed claims.
+4. Link claims to evidence and contradictions.
+5. Score diligence categories with visible rules.
+6. Generate red flags, missing information, founder questions, memo, and recommendation.
+7. Inspect why each conclusion was produced.
+8. Copy or download memo.
+
+## Recommendation states
+
+- `proceed_to_partner_review`
+- `proceed_with_conditions`
+- `request_more_information`
+- `manual_review_required`
+- `decline_based_on_current_evidence`
+
+## Non-goals
+
+- no payments or real investment execution
+- no autonomous legal/financial decisioning
+- no founder outreach
+- no fabricated citations
+- no authentication or billing in MVP

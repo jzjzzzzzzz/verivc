@@ -1,0 +1,78 @@
+# VeriVC 3–5 Minute Demo Script
+
+## 1. Open
+
+Open the local app and say:
+
+> Most AI investment tools generate opinions. VeriVC verifies the evidence behind them.
+
+Explain that the user is a VC, accelerator reviewer, angel, or judge reviewing many startups quickly without losing traceability.
+
+## 2. Show dashboard
+
+Point to:
+
+- New Review
+- two deterministic demo companies
+- evidence-before-opinion principles
+
+Say that the demo works without paid APIs.
+
+## 3. Load the polished risky startup
+
+Click **Aurelia AI — polished but risky**.
+
+Show:
+
+- readiness score
+- restrained recommendation: `decline_based_on_current_evidence`
+- medium/low confidence driven by contradictions rather than language quality
+
+## 4. Open claims
+
+Go to **Claims** and filter or scroll to contradicted claims.
+
+Expand the MRR/customer claim. Show:
+
+- original pitch claim says `$82K MRR`, 23 enterprise customers, 92% pilot conversion
+- evidence says `$31K MRR`, six paying customers, unpaid pilots
+- status is `contradicted`
+- missing evidence lists primary revenue/customer documents
+
+## 5. Show competitor contradiction
+
+Expand the “no direct competitors” claim.
+
+Show that another source lists Gong, Outreach, Salesloft, Apollo, and Clay as adjacent competitors. Emphasize that VeriVC does not accept “no competitors” at face value.
+
+## 6. Show founder questions
+
+Return to **Overview** and highlight generated questions:
+
+- reconcile traction metrics
+- identify competitors and why the company wins
+- prove production readiness with technical artifacts
+- provide legal/regulatory diligence context
+
+## 7. Show memo
+
+Open **Memo** and show the Markdown export.
+
+Point out that important facts use evidence IDs or are labelled as gaps/limitations.
+
+## 8. Compare with the stronger startup
+
+Return to dashboard and load **GrainLoop — less flashy, better supported**.
+
+Show:
+
+- recommendation: `proceed_with_conditions`
+- better business model and traction evidence
+- fewer red flags
+- conditions still required before partner review
+
+## 9. Close
+
+End with:
+
+> VeriVC helps investors review faster without confusing confident language with verified evidence.
