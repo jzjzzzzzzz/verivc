@@ -97,3 +97,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added partner-review checklist engine and Overview panel.
 - Added deterministic checklist gates for evidence coverage, contradictions, traction proof, market support, technology credibility, team evidence, legal/regulatory boundary, and memo handoff.
 - Added tests proving the polished risky demo is blocked while the better-supported demo produces a stronger checklist score.
+
+## Twelfth-iteration requirements completed
+
+- Added memo section evidence coverage engine and tests.
+- Added Memo tab UI indicators for strong/mixed/weak/inference-only sections.
+- Added memo coverage appendix to printable HTML export.

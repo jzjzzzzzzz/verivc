@@ -144,6 +144,11 @@ This keeps fund-thesis customization explainable while preserving the evidence-f
 
 
 
+
+## Twelfth-iteration memo evidence coverage
+
+`lib/memoCoverage.ts` derives section-level coverage indicators from the existing memo, claim graph, evidence vault, red flags, founder questions, and recommendation conditions. It does not rewrite memo text; it labels each section as `strong_evidence`, `mixed_evidence`, `weak_evidence`, or `inference_only`, with a numeric coverage score, confidence, claim IDs, evidence IDs, unsupported claims, contradictions, and missing information. The Memo tab renders these indicators before the memo body, and `lib/memoHtmlExport.ts` includes the same coverage appendix in printable HTML exports.
+
 ## Eleventh-iteration partner review checklist
 
 `lib/reviewChecklist.ts` derives a partner-review handoff checklist from the existing `ReviewResult` without mutating the evidence graph. It checks material claim coverage, contradiction clearance, traction primary proof, market support, technical credibility, team evidence, legal/regulatory review boundary, and memo handoff completeness. Each checklist item carries a status (`ready`, `needs_attention`, `missing`, or `blocked`), priority, explanation, related claim IDs, evidence IDs, and a next action. The Overview UI renders the checklist before scorecards so partners see whether the review package is discussion-ready before reading the memo.

@@ -136,3 +136,7 @@ Show that the readiness score and weighted positives change, but the claim-evide
 ## 19. Partner review checklist
 
 Open Aurelia AI and point to the **Partner review checklist** at the top of Overview. Show that the checklist is **blocked** because material contradictions and weak evidence coverage remain unresolved. Then open GrainLoop and show the higher checklist completion score with more ready gates. Emphasize that this is a handoff readiness checklist, not an autonomous investment approval.
+
+## 20. Memo evidence coverage indicators
+
+Open **Memo** and show **Memo evidence coverage** above the memo body. Expand a weak or inference-only section and point out that VeriVC lists the exact claim IDs, evidence IDs, contradictions, unsupported claims, and missing information behind that memo section. Then click **Download HTML** and explain that the exported partner memo preserves the same coverage appendix.
