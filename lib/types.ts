@@ -233,6 +233,22 @@ export interface ReviewResult {
   founder_questions: FounderQuestion[];
   memo: InvestmentMemo;
   recommendation: Recommendation;
+  last_refresh_diff?: {
+    refreshed_at: string;
+    previous_recommendation: RecommendationState;
+    next_recommendation: RecommendationState;
+    previous_readiness_score: number;
+    next_readiness_score: number;
+    readiness_delta: number;
+    confidence_before: string;
+    confidence_after: string;
+    evaluation_changes: Array<{ dimension: EvaluationDimension; before_score: number; after_score: number; delta: number }>;
+    red_flags_added: string[];
+    red_flags_resolved: string[];
+    founder_question_delta: number;
+    missing_information_delta: number;
+    summary: string;
+  };
   provenance_log: string[];
 }
 

@@ -1,4 +1,5 @@
 import { appendReviewerAuditLogs } from "./reviewerAuditLogs";
+import { buildReviewRefreshDiff } from "./reviewDiff";
 import { buildFounderQuestions, buildMemo, buildStartupProfile, detectFindings, deriveStrengths, evaluateCategories, selectRecommendation } from "./engine";
 import { assertReviewResult, type ReviewResult } from "./types";
 
@@ -16,7 +17,7 @@ export function refreshDerivedAnalysis(review: ReviewResult, now = new Date().to
   const missingInformation = unique(review.claims.flatMap((claim) => claim.missing_evidence).concat(evaluations.flatMap((evaluation) => evaluation.missing_information))).slice(0, 12);
   const memo = buildMemo(review.input, profile, review.claims, review.evidence, evaluations, strengths, redFlags, founderQuestions, recommendation);
 
-  return assertReviewResult({
+  const refreshed = {
     ...review,
     profile,
     evaluations,
@@ -27,5 +28,6 @@ export function refreshDerivedAnalysis(review: ReviewResult, now = new Date().to
     recommendation,
     memo: { ...memo, markdown: appendReviewerAuditLogs(memo.markdown, review) },
     provenance_log: [...review.provenance_log, `${now}: Reviewer refreshed derived analysis from the current claim/evidence graph.`],
-  });
+  };
+  return assertReviewResult({ ...refreshed, last_refresh_diff: buildReviewRefreshDiff(review, refreshed, now) });
 }
