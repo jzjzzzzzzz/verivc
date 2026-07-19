@@ -148,3 +148,7 @@ Open **Claims** and expand **Add reviewer claim**. Add a legal or traction dilig
 ## 22. Manual evidence linker
 
 Open **Evidence**, expand **Manual claim link** on an evidence card, select a claim, choose whether the evidence supports or contradicts it, and save with a reviewer note. Then open the claim in **Claims** and show that the support/contradiction evidence ID is now attached. Return to **Memo** to show memo coverage and the `Reviewer Evidence Link Log`, explaining that the graph changed transparently rather than hiding a human judgment.
+
+## 23. Refresh derived analysis after human graph edits
+
+After adding a manual claim or manual evidence link, click **Refresh derived analysis** in the review workspace action bar. Show that scorecards, red flags, founder questions, recommendation, and memo rebuild from the current claim/evidence graph, while `Reviewer Override Log`, `Reviewer Claim Edit Log`, and `Reviewer Evidence Link Log` remain visible. Emphasize that refresh is explicit human-supervised recomputation, not autonomous investment approval.

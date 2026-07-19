@@ -46,9 +46,10 @@
 ## Seventh-iteration limitations
 
 - Reviewer claim overrides are human annotations, not automatic verification and not a substitute for primary evidence.
-- Claim overrides update the claim record, memo, and audit trail; category scorecards remain rule-based unless evidence is added and the review is rerun.
+- Claim overrides update the claim record, memo, and audit trail; category scorecards remain rule-based unless the reviewer explicitly refreshes derived analysis or reruns with new evidence.
 - Manual claim edits are human annotations. They preserve evidence links and provenance, but they do not authenticate the edited claim or automatically prove it.
 - Manual evidence links are reviewer assertions about relevance. They improve traceability but do not authenticate source documents or replace primary diligence.
+- Refreshing derived analysis recomputes deterministic outputs from the current graph; it does not authenticate evidence, retrieve new external data, or guarantee investment correctness.
 - Override reasons should not contain sensitive information unless the local audit package is handled securely.
 
 ## Eighth-iteration limitations

@@ -19,6 +19,7 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 - Adds memo section evidence coverage indicators so investors can see which memo sections are evidence-backed, mixed, weak, or inference-only.
 - Lets reviewers manually add or edit claims with required notes, provenance entries, and memo edit logs.
 - Lets reviewers manually link or unlink evidence as supporting or contradicting a claim while preserving bidirectional provenance.
+- Refreshes derived scorecards, red flags, founder questions, recommendation, and memo from the current human-edited claim/evidence graph.
 - Supports local review handoff by copying a `verivc-share:v1:` payload that another reviewer can paste into the dashboard import panel without a cloud account.
 
 ## Why it is different
@@ -94,6 +95,8 @@ npm run test:rendered  # build + server-render smoke test
 - `lib/memoCoverage.ts` — memo section evidence coverage scoring across claim/evidence links, contradictions, unsupported claims, and inference-only sections.
 - `lib/claimEditor.ts` — manual reviewer claim add/edit helpers with validation, provenance entries, and memo edit-log preservation.
 - `lib/evidenceLinker.ts` — manual evidence-to-claim support/contradiction link helper with bidirectional graph updates and memo link-log preservation.
+- `lib/refreshReview.ts` — deterministic refresh path that rebuilds derived analyses from current claim/evidence records while preserving reviewer audit logs.
+- `lib/reviewerAuditLogs.ts` — shared memo addendum builder for overrides, claim edits, and evidence links.
 - `lib/sharePackage.ts` — offline `verivc-share:v1:` payload encoding and decoding around the validated audit package schema.
 - `app/components/VeriVCApp.tsx` — local review workflow, dashboard, intake, claim-evidence explorer, evidence vault, scorecards, questions, and memo export.
 
@@ -124,7 +127,7 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - OCR for scanned pitch decks and richer PDF table/chart extraction.
 - Optional public website enrichment with caching, timeouts, and source snapshots.
 - Authenticated GitHub enrichment for private repos and richer commit/release/security signals.
-- Reviewer-editable claim/evidence graph and manual evidence uploads.
+- Workflow templates for different funds, accelerators, and competition rubrics.
 - Calibrated fund-specific scoring profiles.
 - Secure multi-review persistence with export bundles.
 
@@ -207,3 +210,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Manual evidence linker:** each Evidence Vault card can manually link or unlink evidence to a selected claim as support or contradiction.
 - **Bidirectional graph updates:** claim support/contradiction arrays and evidence support/contradiction arrays stay synchronized.
 - **Traceable link log:** reviewer notes append to claim notes, evidence limitations, provenance log, memo `Reviewer Evidence Link Log`, audit JSON, and local share payloads.
+
+## Added in the fifteenth iteration
+
+- **Derived analysis refresh:** the review workspace now includes **Refresh derived analysis** after manual claim/evidence edits.
+- **Current graph recomputation:** refresh rebuilds category evaluations, strengths, red flags, missing information, founder questions, recommendation, and memo from the edited claim/evidence graph.
+- **Audit-log continuity:** reviewer override, claim edit, and evidence link logs are regenerated consistently in the refreshed memo and remain in audit JSON/share payloads.

@@ -115,3 +115,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added manual evidence-to-claim linker logic and tests.
 - Added Evidence Vault UI for linking/unlinking evidence as support or contradiction.
 - Added bidirectional graph synchronization plus provenance and memo link-log preservation.
+
+## Fifteenth-iteration requirements completed
+
+- Added derived-analysis refresh engine and tests.
+- Added workspace action to rebuild scorecards, red flags, founder questions, recommendation, and memo after human claim/evidence graph edits.
+- Centralized reviewer memo audit logs so override, claim edit, and evidence link trails persist through refresh without duplication.
