@@ -1,6 +1,7 @@
 import type { ReviewResult } from "./types";
 import type { WeightedRecommendationSummary } from "./scoringProfiles";
 import { slugify } from "./engine";
+import { buildAuditTimeline, summarizeAuditTimeline } from "./auditTimeline";
 import { buildMemoCoverageSummary } from "./memoCoverage";
 
 export function escapeHtml(value: string): string {
@@ -77,6 +78,13 @@ function coverageClass(status: string): string {
   return "neutral";
 }
 
+function timelineClass(severity: string): string {
+  if (severity === "human_action") return "human";
+  if (severity === "system_action") return "info";
+  if (severity === "risk_relevant") return "bad";
+  return "neutral";
+}
+
 export function printableMemoFileName(review: ReviewResult): string {
   return `${slugify(review.profile.company_name)}-verivc-printable-memo.html`;
 }
@@ -88,6 +96,8 @@ export function buildPrintableMemoHtml(review: ReviewResult, weightedSummary: We
   const evidence = review.evidence.slice(0, 18);
   const reviewerOverrideCount = review.claims.reduce((count, claim) => count + (claim.reviewer_overrides?.length ?? 0), 0);
   const memoCoverage = buildMemoCoverageSummary(review);
+  const auditTimeline = buildAuditTimeline(review);
+  const auditTimelineSummary = summarizeAuditTimeline(auditTimeline);
 
   return `<!doctype html>
 <html lang="en">
@@ -113,7 +123,7 @@ export function buildPrintableMemoHtml(review: ReviewResult, weightedSummary: We
   .metric span { display:block; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; }
   .metric strong { display:block; font-size: 24px; margin-top: 4px; }
   .badge { display:inline-block; border-radius: 999px; padding: 3px 8px; font-size: 11px; font-weight: 850; text-transform: uppercase; letter-spacing: .06em; border: 1px solid currentColor; }
-  .good { color: var(--green); } .info { color: var(--blue); } .warn { color: var(--amber); } .bad { color: var(--red); } .neutral { color: var(--muted); }
+  .good { color: var(--green); } .info { color: var(--blue); } .warn { color: var(--amber); } .bad { color: var(--red); } .neutral { color: var(--muted); } .human { color: #6b48d7; }
   table { width: 100%; border-collapse: collapse; margin: 14px 0 24px; font-size: 13px; }
   th, td { border-bottom: 1px solid var(--line); padding: 10px 8px; text-align: left; vertical-align: top; }
   th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
@@ -126,6 +136,7 @@ export function buildPrintableMemoHtml(review: ReviewResult, weightedSummary: We
   .coverage-card { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: white; }
   .coverage-card strong { display: block; margin-bottom: 4px; }
   .coverage-card small { color: var(--muted); display: block; margin-top: 6px; }
+  .timeline-table td:first-child { white-space: nowrap; }
   footer { padding: 20px 40px 34px; color: var(--muted); font-size: 12px; }
   @media print {
     body { background: white; }
@@ -171,6 +182,11 @@ export function buildPrintableMemoHtml(review: ReviewResult, weightedSummary: We
     <h2>Fund scoring profile</h2>
     <p>${escapeHtml(weightedSummary.explanation)}</p>
     <table><thead><tr><th>Positive dimension</th><th>Score</th><th>Weight</th><th>Contribution</th></tr></thead><tbody>${weightedSummary.top_positive_weighted_dimensions.map((item) => `<tr><td>${escapeHtml(item.dimension.replaceAll("_", " "))}</td><td>${item.score}</td><td>${item.weight}</td><td>${item.contribution}</td></tr>`).join("")}</tbody></table>
+  </section>
+  <section>
+    <h2>Audit timeline appendix</h2>
+    <p>${escapeHtml(auditTimelineSummary.summary)}</p>
+    <table class="timeline-table"><thead><tr><th>When</th><th>Type</th><th>Event</th><th>Related records</th></tr></thead><tbody>${auditTimeline.slice(0, 28).map((event) => `<tr><td>${escapeHtml(event.occurred_at ?? "No timestamp")}</td><td><span class="badge ${timelineClass(event.severity)}">${escapeHtml(event.event_type)}</span></td><td><strong>${escapeHtml(event.title)}</strong><br/>${escapeHtml(event.description.slice(0, 360))}</td><td>Claims: ${escapeHtml(event.claim_ids.join(", ") || "none")}<br/>Evidence: ${escapeHtml(event.evidence_ids.join(", ") || "none")}</td></tr>`).join("")}</tbody></table>
   </section>
   <section>
     <h2>Claim-evidence appendix</h2>
