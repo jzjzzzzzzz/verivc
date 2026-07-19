@@ -156,3 +156,7 @@ After adding a manual claim or manual evidence link, click **Refresh derived ana
 ## 24. Audit timeline
 
 Open the new **Audit Timeline** tab after running a demo or making a manual edit. Show the summary counters for human actions, risk-relevant evidence, and refreshes. Expand a reviewer override, manual claim edit, evidence link, or refresh event and point out the related claim IDs and evidence IDs. Close with: `VeriVC does not just output a memo; it preserves how the memo was produced.`
+
+## 25. Last Refresh Diff
+
+After making an override or manual evidence link, click **Refresh derived analysis**. Point to **Last refresh diff** near the top of the workspace and read the summary aloud: recommendation movement, readiness delta, changed scorecards, red flags added or resolved, and question/missing-info deltas. Then download HTML memo and show that the same refresh diff is preserved in the partner export.

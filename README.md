@@ -21,6 +21,7 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 - Lets reviewers manually link or unlink evidence as supporting or contradicting a claim while preserving bidirectional provenance.
 - Refreshes derived scorecards, red flags, founder questions, recommendation, and memo from the current human-edited claim/evidence graph.
 - Shows an Audit Timeline for intake, evidence capture, reviewer actions, refreshes, and export readiness.
+- Shows and exports a Last Refresh Diff explaining how scores, red flags, questions, and recommendations changed after recomputation.
 - Supports local review handoff by copying a `verivc-share:v1:` payload that another reviewer can paste into the dashboard import panel without a cloud account.
 
 ## Why it is different
@@ -98,6 +99,7 @@ npm run test:rendered  # build + server-render smoke test
 - `lib/evidenceLinker.ts` — manual evidence-to-claim support/contradiction link helper with bidirectional graph updates and memo link-log preservation.
 - `lib/refreshReview.ts` — deterministic refresh path that rebuilds derived analyses from current claim/evidence records while preserving reviewer audit logs.
 - `lib/auditTimeline.ts` — audit event builder for intake, evidence capture, reviewer edits, evidence links, refreshes, and exportability.
+- `lib/reviewDiff.ts` — before/after refresh diff engine for recommendation, readiness, scorecards, red flags, questions, and missing information.
 - `lib/reviewerAuditLogs.ts` — shared memo addendum builder for overrides, claim edits, and evidence links.
 - `lib/sharePackage.ts` — offline `verivc-share:v1:` payload encoding and decoding around the validated audit package schema.
 - `app/components/VeriVCApp.tsx` — local review workflow, dashboard, intake, claim-evidence explorer, evidence vault, scorecards, questions, and memo export.
@@ -224,3 +226,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Audit Timeline:** the review workspace now includes an Audit Timeline tab.
 - **Review process traceability:** timeline events cover intake, evidence capture, deterministic analysis steps, reviewer overrides, manual claim edits, manual evidence links, refreshes, and export readiness.
 - **Linked audit context:** each event shows related claim IDs and evidence IDs where available so partner reviewers can inspect why a conclusion changed.
+
+## Added in the seventeenth iteration
+
+- **Last Refresh Diff:** after clicking **Refresh derived analysis**, the workspace shows how recommendation, readiness, questions, missing information, scorecards, and red flags changed.
+- **Diff persistence:** refresh diffs are stored on the review result, audit JSON, local share payloads, and printable memo when available.
+- **Exportable change explanation:** HTML memo exports include both audit timeline and refresh diff appendices for partner review.

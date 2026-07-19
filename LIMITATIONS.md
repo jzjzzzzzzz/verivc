@@ -69,3 +69,9 @@
 - The Audit Timeline is a local reconstruction from the current review record; it is not cryptographically signed or tamper-proof.
 - Timestamps may be absent for deterministic setup steps or imported records that lack event-level times.
 - Timeline events explain provenance and workflow history, but they do not authenticate the underlying evidence.
+
+## Seventeenth-iteration limitations
+
+- Last Refresh Diff compares the immediately previous stored review view with the refreshed deterministic output; it is not a full version-control history.
+- If a reviewer imports an older audit package or edits JSON outside the app, the diff only reflects fields present in that local record.
+- Diff explanations show what changed, not whether the changed evidence is authentic.

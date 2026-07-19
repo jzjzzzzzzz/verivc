@@ -194,3 +194,7 @@ PDF extraction is intentionally client-side and local for hackathon reliability.
 ## Sixteenth-iteration audit timeline
 
 `lib/auditTimeline.ts` converts a completed `ReviewResult` into ordered audit events. It combines provenance-log entries, evidence capture metadata, reviewer override records, manual claim edit notes, manual evidence link notes, refresh actions, and current export readiness into a single timeline. Events carry type, severity, title, description, optional timestamp, related claim IDs, and related evidence IDs. The workspace Audit Timeline tab renders these events as expandable cards, making human and system actions visible without mutating the underlying review graph.
+
+## Seventeenth-iteration refresh diff
+
+`lib/reviewDiff.ts` compares a stale review snapshot with the refreshed review snapshot created by `refreshDerivedAnalysis`. The diff records previous/next recommendation, previous/next readiness score, readiness delta, confidence movement, scorecard dimension deltas, red flags added/resolved, founder-question delta, missing-information delta, and a plain-language summary. `ReviewResult.last_refresh_diff` stores the latest diff so browser storage, audit JSON, share payloads, workspace UI, and printable HTML exports all preserve the explanation of what changed during the last explicit recomputation.

@@ -127,3 +127,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added audit timeline engine and tests.
 - Added Review Workspace Audit Timeline tab for intake, evidence capture, reviewer actions, refreshes, and export readiness.
 - Added claim/evidence IDs to timeline events where available for partner-review traceability.
+
+## Seventeenth-iteration requirements completed
+
+- Added refresh diff engine and tests.
+- Added workspace Last Refresh Diff panel after explicit recomputation.
+- Added refresh diff appendix to printable HTML memo exports.
