@@ -1,4 +1,4 @@
-import { assertReviewResult, type Evidence, type ReviewResult } from "./types";
+import { assertReviewResult, type ClaimStatus, type ConfidenceLevel, type Evidence, type ReviewResult } from "./types";
 
 export type ManualEvidenceLinkMode = "supports" | "contradicts";
 export type ManualEvidenceLinkAction = "link" | "unlink";
@@ -37,7 +37,7 @@ function evidenceRelationshipLabel(mode: ManualEvidenceLinkMode) {
   return mode === "supports" ? "supports_claim_ids" : "contradicts_claim_ids";
 }
 
-function updatedClaimStatus(claim: ReviewResult["claims"][number]) {
+function updatedClaimStatus(claim: ReviewResult["claims"][number]): ClaimStatus {
   if (claim.contradicting_evidence_ids.length) return "contradicted";
   if (claim.supporting_evidence_ids.length && claim.missing_evidence.length) return "partially_supported";
   if (claim.supporting_evidence_ids.length) return "supported";
@@ -45,7 +45,7 @@ function updatedClaimStatus(claim: ReviewResult["claims"][number]) {
   return claim.status;
 }
 
-function updatedClaimConfidence(claim: ReviewResult["claims"][number]) {
+function updatedClaimConfidence(claim: ReviewResult["claims"][number]): ConfidenceLevel {
   if (claim.contradicting_evidence_ids.length) return claim.materiality === "critical" || claim.materiality === "high" ? "high" : "medium";
   if (claim.supporting_evidence_ids.length >= 2) return "high";
   if (claim.supporting_evidence_ids.length === 1) return "medium";

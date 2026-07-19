@@ -14,6 +14,7 @@ import { createSharePayload, parseSharePayload, sharePayloadSummary } from "@/li
 import { buildPartnerReviewChecklist, type ChecklistStatus } from "@/lib/reviewChecklist";
 import { buildMemoCoverageSummary, type MemoCoverageStatus } from "@/lib/memoCoverage";
 import { addManualClaim, editClaimMetadata, type AddManualClaimInput, type EditClaimInput } from "@/lib/claimEditor";
+import { applyManualEvidenceLink, type ManualEvidenceLinkInput, type ManualEvidenceLinkMode, type ManualEvidenceLinkAction } from "@/lib/evidenceLinker";
 import { claimCategories, type CategoryEvaluation, type Claim, type Evidence, type ReviewResult, type StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -529,7 +530,7 @@ function EvidenceMini({ evidence }: { evidence?: Evidence }) {
   return <div className="evidence-mini"><strong>{evidence.evidence_id}: {evidence.title}</strong><p>{evidence.excerpt}</p><small>{evidence.source_type} · reliability {evidence.reliability_level}</small></div>;
 }
 
-function EvidenceVault({ evidence, onAddEvidence }: { evidence: Evidence[]; onAddEvidence: (evidence: Evidence) => void }) {
+function EvidenceVault({ evidence, claims, onAddEvidence, onLinkEvidence }: { evidence: Evidence[]; claims: Claim[]; onAddEvidence: (evidence: Evidence) => void; onLinkEvidence: (input: ManualEvidenceLinkInput) => void }) {
   return (
     <section className="workspace-section" aria-labelledby="evidence-title">
       <div className="section-heading"><span id="evidence-title">Evidence vault</span><small>Provenance is preserved; unavailable evidence is explicit</small></div>
@@ -543,10 +544,44 @@ function EvidenceVault({ evidence, onAddEvidence }: { evidence: Evidence[]; onAd
             {item.url_or_file ? <small>{item.url_or_file}</small> : null}
             <small>Supports {item.supports_claim_ids.length} · Contradicts {item.contradicts_claim_ids.length}</small>
             {item.limitations.length ? <ul>{item.limitations.map((limit) => <li key={limit}>{limit}</li>)}</ul> : null}
+            <ManualEvidenceLinkForm evidence={item} claims={claims} onLinkEvidence={onLinkEvidence} />
           </article>
         ))}
       </div>
     </section>
+  );
+}
+
+function ManualEvidenceLinkForm({ evidence, claims, onLinkEvidence }: { evidence: Evidence; claims: Claim[]; onLinkEvidence: (input: ManualEvidenceLinkInput) => void }) {
+  const [claimId, setClaimId] = useState(claims[0]?.claim_id ?? "");
+  const [mode, setMode] = useState<ManualEvidenceLinkMode>("supports");
+  const [action, setAction] = useState<ManualEvidenceLinkAction>("link");
+  const [note, setNote] = useState("");
+  const [message, setMessage] = useState("");
+  const selectedClaim = claims.find((claim) => claim.claim_id === claimId);
+  return (
+    <details className="manual-evidence-linker">
+      <summary><strong>Manual claim link</strong><Badge tone="purple">Traceable</Badge></summary>
+      <form onSubmit={(event) => {
+        event.preventDefault();
+        try {
+          onLinkEvidence({ evidence_id: evidence.evidence_id, claim_id: claimId, mode, action, reviewer_note: note });
+          setMessage(`Evidence ${action === "link" ? "linked" : "unlinked"} as ${mode}.`);
+          setNote("");
+        } catch (error) {
+          setMessage(error instanceof Error ? error.message : "Unable to update evidence link.");
+        }
+      }}>
+        <label>Claim<select value={claimId} onChange={(event) => setClaimId(event.target.value)}>{claims.map((claim) => <option key={claim.claim_id} value={claim.claim_id}>{claim.claim_id} · {claim.claim_text.slice(0, 88)}</option>)}</select></label>
+        {selectedClaim ? <small className="muted">Current claim status: {selectedClaim.status} · confidence {selectedClaim.confidence}</small> : null}
+        <div className="linker-row">
+          <label>Relationship<select value={mode} onChange={(event) => setMode(event.target.value as ManualEvidenceLinkMode)}><option value="supports">supports</option><option value="contradicts">contradicts</option></select></label>
+          <label>Action<select value={action} onChange={(event) => setAction(event.target.value as ManualEvidenceLinkAction)}><option value="link">link</option><option value="unlink">unlink</option></select></label>
+        </div>
+        <label>Reviewer note<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Why does this evidence support or contradict the selected claim?" /></label>
+        <div className="form-actions"><button className="secondary-button" type="submit" disabled={!claimId}>Save manual link</button>{message ? <Badge tone={message.startsWith("Evidence") ? "green" : "amber"}>{message}</Badge> : null}</div>
+      </form>
+    </details>
   );
 }
 
@@ -676,6 +711,7 @@ function ReviewWorkspace({
   onOverrideClaim,
   onAddManualClaim,
   onEditClaim,
+  onLinkEvidence,
 }: {
   review: ReviewResult;
   onBack: () => void;
@@ -684,6 +720,7 @@ function ReviewWorkspace({
   onOverrideClaim: (claimId: string, status: Claim["status"], confidence: Claim["confidence"], note: string) => void;
   onAddManualClaim: (input: AddManualClaimInput) => void;
   onEditClaim: (input: EditClaimInput) => void;
+  onLinkEvidence: (input: ManualEvidenceLinkInput) => void;
 }) {
   const [tab, setTab] = useState<"overview" | "claims" | "evidence" | "memo">("overview");
   const [profileId, setProfileId] = useState<ScoringProfileId>("balanced");
@@ -709,7 +746,7 @@ function ReviewWorkspace({
       </nav>
       {tab === "overview" ? <Overview review={review} /> : null}
       {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} onOverrideClaim={onOverrideClaim} onAddManualClaim={onAddManualClaim} onEditClaim={onEditClaim} /> : null}
-      {tab === "evidence" ? <EvidenceVault evidence={review.evidence} onAddEvidence={onAddEvidence} /> : null}
+      {tab === "evidence" ? <EvidenceVault evidence={review.evidence} claims={review.claims} onAddEvidence={onAddEvidence} onLinkEvidence={onLinkEvidence} /> : null}
       {tab === "memo" ? <MemoPanel review={review} weightedSummary={weightedSummary} /> : null}
     </section>
   );
@@ -893,12 +930,17 @@ export default function VeriVCApp() {
     saveReview(editClaimMetadata(review, input));
   };
 
+  const linkEvidenceInCurrentReview = (input: ManualEvidenceLinkInput) => {
+    if (!review) return;
+    saveReview(applyManualEvidenceLink(review, input));
+  };
+
   return (
     <main className="app-shell">
       <header className="topbar"><button className="brand" onClick={() => setMode("dashboard")} aria-label="Go to VeriVC dashboard"><span>V</span><strong>VeriVC</strong></button><div className="topbar-note">Evidence-driven AI startup due-diligence copilot</div></header>
       {mode === "dashboard" ? <Dashboard recent={recent} onOpenReview={(item) => { setReview(item); setMode("review"); }} onClearReviews={() => { setRecent([]); setReview(undefined); }} onImportReview={(item) => saveReview(item)} onNew={() => { setDraft(undefined); setMode("intake"); }} onCompareDemos={compareDemoReviews} onDemo={(index) => { const demo = demoCompanies[index]; setDraft(demo.input); run(demo.input, demo.evidence); }} /> : null}
       {mode === "intake" ? <IntakeForm initialInput={draft} onCancel={() => setMode("dashboard")} onRun={(input) => run(input)} /> : null}
-      {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onOverrideClaim={overrideClaimInCurrentReview} onAddManualClaim={addManualClaimToCurrentReview} onEditClaim={editClaimInCurrentReview} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
+      {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onOverrideClaim={overrideClaimInCurrentReview} onAddManualClaim={addManualClaimToCurrentReview} onEditClaim={editClaimInCurrentReview} onLinkEvidence={linkEvidenceInCurrentReview} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
       {mode === "compare" && comparisonReviews ? <ComparisonWorkspace reviews={comparisonReviews} onBack={() => setMode("dashboard")} onOpenReview={(item) => { setReview(item); setMode("review"); }} /> : null}
     </main>
   );

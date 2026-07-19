@@ -146,7 +146,8 @@ blockquote { margin: 0; padding: 12px; border-left: 3px solid var(--blue); backg
 .memo-box { white-space: pre-wrap; overflow: auto; max-height: 720px; border: 1px solid var(--line); border-radius: 20px; padding: 18px; background: #111827; color: #eef2ff; font-family: var(--font-geist-mono), ui-monospace, monospace; line-height: 1.55; }
 
 .manual-claim-editor,
-.claim-metadata-editor {
+.claim-metadata-editor,
+.manual-evidence-linker {
   border: 1px solid rgba(107, 72, 215, 0.22);
   border-radius: 20px;
   background: linear-gradient(135deg, rgba(107, 72, 215, 0.07), rgba(255, 255, 255, 0.72));
@@ -158,7 +159,8 @@ blockquote { margin: 0; padding: 12px; border-left: 3px solid var(--blue); backg
 }
 
 .manual-claim-editor summary,
-.claim-metadata-editor summary {
+.claim-metadata-editor summary,
+.manual-evidence-linker summary {
   list-style: none;
   display: flex;
   justify-content: space-between;
@@ -169,15 +171,35 @@ blockquote { margin: 0; padding: 12px; border-left: 3px solid var(--blue); backg
 }
 
 .manual-claim-editor summary::-webkit-details-marker,
-.claim-metadata-editor summary::-webkit-details-marker {
+.claim-metadata-editor summary::-webkit-details-marker,
+.manual-evidence-linker summary::-webkit-details-marker {
   display: none;
 }
 
 .manual-claim-editor form,
-.claim-metadata-editor form {
+.claim-metadata-editor form,
+.manual-evidence-linker form {
   display: grid;
   gap: 12px;
   padding: 0 16px 16px;
+}
+
+.manual-evidence-linker {
+  margin-top: 6px;
+}
+
+.manual-evidence-linker summary {
+  padding: 11px 12px;
+}
+
+.manual-evidence-linker form {
+  padding: 0 12px 12px;
+}
+
+.linker-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .claim-editor-grid {
