@@ -11,6 +11,7 @@ import { applyClaimReviewerOverride } from "@/lib/reviewerOverrides";
 import { buildPrintableMemoHtml, printableMemoFileName } from "@/lib/memoHtmlExport";
 import { compareReviews } from "@/lib/reviewComparison";
 import { createSharePayload, parseSharePayload, sharePayloadSummary } from "@/lib/sharePackage";
+import { buildPartnerReviewChecklist, type ChecklistStatus } from "@/lib/reviewChecklist";
 import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -66,6 +67,14 @@ function recommendationTone(state: string): "green" | "amber" | "red" | "blue" |
   if (state === "proceed_with_conditions") return "blue";
   if (state === "manual_review_required") return "amber";
   if (state === "decline_based_on_current_evidence") return "red";
+  return "neutral";
+}
+
+function checklistTone(status: ChecklistStatus): "green" | "amber" | "red" | "blue" | "neutral" {
+  if (status === "ready") return "green";
+  if (status === "needs_attention") return "blue";
+  if (status === "missing") return "amber";
+  if (status === "blocked") return "red";
   return "neutral";
 }
 
@@ -613,14 +622,58 @@ function ComparisonWorkspace({ reviews, onBack, onOpenReview }: { reviews: [Revi
 }
 
 function Overview({ review }: { review: ReviewResult }) {
+  const checklist = useMemo(() => buildPartnerReviewChecklist(review), [review]);
   return (
     <div className="overview-grid">
+      <PartnerChecklistPanel checklist={checklist} />
       <section className="workspace-section span-8"><div className="section-heading"><span>Category evaluations</span><small>Rule-based scoring, no fake precision</small></div><div className="score-grid">{review.evaluations.map((evaluation) => <ScoreCard key={evaluation.dimension} evaluation={evaluation} />)}</div></section>
       <aside className="workspace-section span-4"><div className="section-heading"><span>Top red flags</span><small>{review.red_flags.length} detected</small></div>{review.red_flags.length ? review.red_flags.slice(0, 5).map((finding) => <details className="finding-card" key={finding.finding_id}><summary><Badge tone={finding.severity === "high" || finding.severity === "critical" ? "red" : "amber"}>{finding.severity}</Badge><strong>{finding.title}</strong></summary><p>{finding.explanation}</p><p className="muted">Claims: {finding.related_claim_ids.join(", ") || "none"} · Evidence: {finding.evidence_ids.join(", ") || "none"}</p></details>) : <p className="empty-state">No major contradictions detected.</p>}</aside>
       <section className="workspace-section span-6"><div className="section-heading"><span>Evidence-backed strengths</span><small>Only linked or score-derived items</small></div>{review.strengths.length ? <ul className="clean-list">{review.strengths.map((item) => <li key={item}>{item}</li>)}</ul> : <p className="empty-state">No strong evidence-backed strengths yet.</p>}</section>
       <section className="workspace-section span-6"><div className="section-heading"><span>Missing information</span><small>Confidence reducers</small></div>{review.missing_information.length ? <ul className="clean-list">{review.missing_information.slice(0, 8).map((item) => <li key={item}>{item}</li>)}</ul> : <p className="empty-state">No major missing information detected.</p>}</section>
       <section className="workspace-section span-12"><div className="section-heading"><span>Founder follow-up questions</span><small>Prioritized by unresolved findings</small></div><div className="questions-grid">{review.founder_questions.map((q) => <article className="question-card" key={q.question_id}><Badge tone={q.priority === "critical" || q.priority === "high" ? "red" : "blue"}>{q.group}</Badge><h3>{q.question}</h3><p>{q.rationale}</p><small>{q.related_claim_ids.join(", ") || "General diligence"}</small></article>)}</div></section>
     </div>
+  );
+}
+
+function PartnerChecklistPanel({ checklist }: { checklist: ReturnType<typeof buildPartnerReviewChecklist> }) {
+  return (
+    <section className="workspace-section span-12 checklist-panel" aria-labelledby="checklist-title">
+      <div className="section-heading">
+        <div>
+          <span id="checklist-title">Partner review checklist</span>
+          <small>Deterministic readiness gate for evidence handoff, not an investment authorization</small>
+        </div>
+        <Badge tone={checklistTone(checklist.overall_status)}>{checklist.overall_status.replaceAll("_", " ")}</Badge>
+      </div>
+      <div className="checklist-summary">
+        <div className="checklist-score"><span>Completion</span><strong>{checklist.completion_score}</strong><small>/100 checklist-weighted</small></div>
+        <p>{checklist.summary}</p>
+        <div className="checklist-counts" aria-label="Checklist status counts">
+          <span><strong>{checklist.ready_count}</strong> ready</span>
+          <span><strong>{checklist.needs_attention_count}</strong> attention</span>
+          <span><strong>{checklist.missing_count}</strong> missing</span>
+          <span><strong>{checklist.blocked_count}</strong> blocked</span>
+        </div>
+      </div>
+      <div className="checklist-grid">
+        {checklist.items.map((item) => (
+          <details className={cls("checklist-item", `checklist-${item.status}`)} key={item.item_id}>
+            <summary>
+              <div>
+                <span className="claim-id">{item.group} · {item.priority}</span>
+                <strong>{item.label}</strong>
+              </div>
+              <Badge tone={checklistTone(item.status)}>{item.status.replaceAll("_", " ")}</Badge>
+            </summary>
+            <div className="checklist-detail">
+              <p>{item.explanation}</p>
+              <p><strong>Next action:</strong> {item.next_action}</p>
+              <small>Claims: {item.claim_ids.join(", ") || "none"} · Evidence: {item.evidence_ids.join(", ") || "none"}</small>
+            </div>
+          </details>
+        ))}
+      </div>
+    </section>
   );
 }
 

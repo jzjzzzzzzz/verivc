@@ -1,4 +1,4 @@
-import type { Claim, Evidence, ReviewResult } from "./types";
+import type { Claim, ReviewResult } from "./types";
 
 export type ChecklistStatus = "ready" | "needs_attention" | "missing" | "blocked";
 export type ChecklistPriority = "critical" | "high" | "medium" | "low";
