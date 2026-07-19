@@ -18,6 +18,7 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 - Adds a Partner Review Checklist that turns the evidence graph into explicit handoff gates: ready, needs attention, missing, or blocked.
 - Adds memo section evidence coverage indicators so investors can see which memo sections are evidence-backed, mixed, weak, or inference-only.
 - Lets reviewers manually add or edit claims with required notes, provenance entries, and memo edit logs.
+- Lets reviewers manually link or unlink evidence as supporting or contradicting a claim while preserving bidirectional provenance.
 - Supports local review handoff by copying a `verivc-share:v1:` payload that another reviewer can paste into the dashboard import panel without a cloud account.
 
 ## Why it is different
@@ -92,6 +93,7 @@ npm run test:rendered  # build + server-render smoke test
 - `lib/reviewChecklist.ts` — partner-review checklist rules for material evidence coverage, contradictions, traction proof, market support, technical credibility, team evidence, legal review, and memo handoff.
 - `lib/memoCoverage.ts` — memo section evidence coverage scoring across claim/evidence links, contradictions, unsupported claims, and inference-only sections.
 - `lib/claimEditor.ts` — manual reviewer claim add/edit helpers with validation, provenance entries, and memo edit-log preservation.
+- `lib/evidenceLinker.ts` — manual evidence-to-claim support/contradiction link helper with bidirectional graph updates and memo link-log preservation.
 - `lib/sharePackage.ts` — offline `verivc-share:v1:` payload encoding and decoding around the validated audit package schema.
 - `app/components/VeriVCApp.tsx` — local review workflow, dashboard, intake, claim-evidence explorer, evidence vault, scorecards, questions, and memo export.
 
@@ -199,3 +201,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Manual claim editor:** reviewers can add a new claim from the claim explorer with category, materiality, verifiability, status, confidence, source excerpt, and required note.
 - **Claim metadata edits:** reviewers can adjust claim wording/category/materiality/verifiability while preserving existing evidence links.
 - **Audit trail preservation:** manual claim additions and edits append to provenance logs, audit JSON, local share payloads, and a memo `Reviewer Claim Edit Log`.
+
+## Added in the fourteenth iteration
+
+- **Manual evidence linker:** each Evidence Vault card can manually link or unlink evidence to a selected claim as support or contradiction.
+- **Bidirectional graph updates:** claim support/contradiction arrays and evidence support/contradiction arrays stay synchronized.
+- **Traceable link log:** reviewer notes append to claim notes, evidence limitations, provenance log, memo `Reviewer Evidence Link Log`, audit JSON, and local share payloads.

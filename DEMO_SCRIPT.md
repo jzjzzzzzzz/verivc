@@ -144,3 +144,7 @@ Open **Memo** and show **Memo evidence coverage** above the memo body. Expand a 
 ## 21. Manual claim editor
 
 Open **Claims** and expand **Add reviewer claim**. Add a legal or traction diligence claim from a reviewer note, then show the new `CL-REV-*` claim in the explorer. Next expand an existing claim and use **Edit claim metadata** to clarify wording or materiality. Point out that evidence links remain visible, the memo gains a `Reviewer Claim Edit Log`, and the audit JSON/share payload preserve the human edit trail.
+
+## 22. Manual evidence linker
+
+Open **Evidence**, expand **Manual claim link** on an evidence card, select a claim, choose whether the evidence supports or contradicts it, and save with a reviewer note. Then open the claim in **Claims** and show that the support/contradiction evidence ID is now attached. Return to **Memo** to show memo coverage and the `Reviewer Evidence Link Log`, explaining that the graph changed transparently rather than hiding a human judgment.

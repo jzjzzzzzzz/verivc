@@ -109,3 +109,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added manual claim editor logic and tests.
 - Added Claim Explorer UI for adding reviewer claims and editing claim metadata.
 - Added provenance and memo edit-log preservation for manual claim graph changes.
+
+## Fourteenth-iteration requirements completed
+
+- Added manual evidence-to-claim linker logic and tests.
+- Added Evidence Vault UI for linking/unlinking evidence as support or contradiction.
+- Added bidirectional graph synchronization plus provenance and memo link-log preservation.

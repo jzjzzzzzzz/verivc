@@ -146,6 +146,11 @@ This keeps fund-thesis customization explainable while preserving the evidence-f
 
 
 
+
+## Fourteenth-iteration manual evidence linker
+
+`lib/evidenceLinker.ts` lets reviewers manually link or unlink any evidence item to any claim as either support or contradiction. The helper validates claim/evidence IDs and reviewer notes, updates both sides of the graph (`Claim.supporting_evidence_ids` / `Claim.contradicting_evidence_ids` and `Evidence.supports_claim_ids` / `Evidence.contradicts_claim_ids`), moves a relationship out of the opposite bucket when necessary, updates claim status/confidence conservatively, appends an evidence limitation, and maintains a `Reviewer Evidence Link Log` in the memo. The Evidence Vault UI exposes this as a per-evidence form. Derived views such as memo coverage and partner checklist read the updated graph immediately; deterministic scorecards remain rule-based unless the review is rerun with additional evidence.
+
 ## Thirteenth-iteration manual claim editor
 
 `lib/claimEditor.ts` adds reviewer-controlled claim graph editing without hiding human judgment. `addManualClaim` creates `CL-REV-*` claims from reviewer notes or data-room observations, marks them as manual evidence provenance, and defaults to insufficient evidence unless the reviewer explicitly selects another status. `editClaimMetadata` lets reviewers correct claim wording, category, materiality, or verifiability while preserving evidence links. Both paths require an explanatory note, append provenance-log entries, and maintain a `Reviewer Claim Edit Log` in the memo. Scorecards are not silently recomputed from claim edits alone; reviewers can add evidence and rerun when the evidence graph should change scoring.
