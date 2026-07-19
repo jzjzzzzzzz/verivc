@@ -1,3 +1,4 @@
+import { appendReviewerAuditLogs } from "./reviewerAuditLogs";
 import { assertReviewResult, claimCategories, claimStatuses, type Claim, type ClaimCategory, type ClaimStatus, type ConfidenceLevel, type Materiality, type ReviewResult, type Verifiability } from "./types";
 
 export interface AddManualClaimInput {
@@ -44,18 +45,6 @@ function requireStatus(status: ClaimStatus) {
   if (!claimStatuses.includes(status)) throw new Error(`Unsupported claim status: ${String(status)}.`);
 }
 
-function claimEditLog(claims: Claim[]): string {
-  const edited = claims.filter((claim) => claim.reviewer_notes.some((note) => note.startsWith("Reviewer-added claim") || note.startsWith("Reviewer-edited claim")));
-  if (!edited.length) return "";
-  return `\n## Reviewer Claim Edit Log\n${edited.map((claim) => `- ${claim.claim_id}: ${claim.claim_text} — ${claim.reviewer_notes.filter((note) => note.startsWith("Reviewer-added claim") || note.startsWith("Reviewer-edited claim")).join(" ")}`).join("\n")}\n`;
-}
-
-function replaceClaimEditLog(markdown: string, claims: Claim[]) {
-  const withoutExisting = markdown.replace(/\n## Reviewer Claim Edit Log\n[\s\S]*?(?=\n## |$)/u, "").trimEnd();
-  const addendum = claimEditLog(claims);
-  return addendum ? `${withoutExisting}\n${addendum}` : `${withoutExisting}\n`;
-}
-
 function nextManualClaimId(review: ReviewResult) {
   const existing = review.claims
     .map((claim) => claim.claim_id.match(/^CL-REV-(\d+)$/u)?.[1])
@@ -94,7 +83,7 @@ export function addManualClaim(review: ReviewResult, input: AddManualClaimInput,
   return assertReviewResult({
     ...review,
     claims,
-    memo: { ...review.memo, markdown: replaceClaimEditLog(review.memo.markdown, claims) },
+    memo: { ...review.memo, markdown: appendReviewerAuditLogs(review.memo.markdown, { ...review, claims }) },
     provenance_log: [...review.provenance_log, `${now}: Reviewer added ${claim.claim_id} via manual claim editor.`],
   });
 }
@@ -123,7 +112,7 @@ export function editClaimMetadata(review: ReviewResult, input: EditClaimInput, n
   return assertReviewResult({
     ...review,
     claims,
-    memo: { ...review.memo, markdown: replaceClaimEditLog(review.memo.markdown, claims) },
+    memo: { ...review.memo, markdown: appendReviewerAuditLogs(review.memo.markdown, { ...review, claims }) },
     provenance_log: [...review.provenance_log, `${now}: Reviewer edited ${input.claim_id} via manual claim editor.`],
   });
 }

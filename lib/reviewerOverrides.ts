@@ -1,4 +1,5 @@
 import type { ClaimStatus, ConfidenceLevel, ReviewerClaimOverride, ReviewResult } from "./types";
+import { appendReviewerAuditLogs, stripReviewerAuditLogs } from "./reviewerAuditLogs";
 import { assertReviewResult, claimStatuses } from "./types";
 
 export interface ClaimOverrideInput {
@@ -19,17 +20,8 @@ function validateOverride(input: ClaimOverrideInput): string {
   return note.slice(0, 600);
 }
 
-function buildOverrideLog(review: ReviewResult): string {
-  const overrides = review.claims.flatMap((claim) => claim.reviewer_overrides ?? []);
-  if (!overrides.length) return "";
-  const rows = overrides
-    .map((override) => `- ${override.updated_at}: ${override.claim_id} ${override.previous_status}/${override.previous_confidence} -> ${override.new_status}/${override.new_confidence}. Reason: ${override.note}`)
-    .join("\n");
-  return `\n\n## Reviewer Override Log\nThese human edits adjust claim-level interpretation and are preserved for audit. They do not execute investments or replace primary-source diligence.\n\n${rows}\n`;
-}
-
 export function memoWithoutOverrideLog(markdown: string): string {
-  return markdown.replace(/\n\n## Reviewer Override Log[\s\S]*$/m, "").trimEnd();
+  return stripReviewerAuditLogs(markdown);
 }
 
 export function applyClaimReviewerOverride(review: ReviewResult, input: ClaimOverrideInput): ReviewResult {
@@ -61,7 +53,7 @@ export function applyClaimReviewerOverride(review: ReviewResult, input: ClaimOve
 
   if (!found) throw new Error(`Claim not found: ${input.claimId}`);
 
-  const baseMemo = memoWithoutOverrideLog(review.memo.markdown);
+  const baseMemo = stripReviewerAuditLogs(review.memo.markdown);
   const next: ReviewResult = {
     ...review,
     claims,
@@ -75,6 +67,6 @@ export function applyClaimReviewerOverride(review: ReviewResult, input: ClaimOve
     },
     provenance_log: [...review.provenance_log, `Reviewer override applied to ${input.claimId} at ${updatedAt}: ${note}`],
   };
-  next.memo = { ...next.memo, markdown: `${baseMemo}${buildOverrideLog(next)}` };
+  next.memo = { ...next.memo, markdown: appendReviewerAuditLogs(baseMemo, next) };
   return assertReviewResult(next);
 }

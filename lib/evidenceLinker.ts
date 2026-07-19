@@ -1,3 +1,4 @@
+import { appendReviewerAuditLogs } from "./reviewerAuditLogs";
 import { assertReviewResult, type ClaimStatus, type ConfidenceLevel, type Evidence, type ReviewResult } from "./types";
 
 export type ManualEvidenceLinkMode = "supports" | "contradicts";
@@ -57,18 +58,6 @@ function appendManualLimitations(evidence: Evidence, note: string) {
   return unique([...evidence.limitations, manual]).slice(0, 8);
 }
 
-function manualEvidenceLinkLog(review: ReviewResult): string {
-  const notes = review.claims.flatMap((claim) => claim.reviewer_notes.filter((note) => note.startsWith("Reviewer linked evidence") || note.startsWith("Reviewer unlinked evidence")));
-  if (!notes.length) return "";
-  return `\n## Reviewer Evidence Link Log\n${notes.map((note) => `- ${note}`).join("\n")}\n`;
-}
-
-function replaceManualEvidenceLinkLog(markdown: string, review: ReviewResult) {
-  const withoutExisting = markdown.replace(/\n## Reviewer Evidence Link Log\n[\s\S]*?(?=\n## |$)/u, "").trimEnd();
-  const addendum = manualEvidenceLinkLog(review);
-  return addendum ? `${withoutExisting}\n${addendum}` : `${withoutExisting}\n`;
-}
-
 export function applyManualEvidenceLink(review: ReviewResult, input: ManualEvidenceLinkInput, now = new Date().toISOString()): ReviewResult {
   const note = requireNote(input.reviewer_note);
   const claimExists = review.claims.some((claim) => claim.claim_id === input.claim_id);
@@ -111,6 +100,6 @@ export function applyManualEvidenceLink(review: ReviewResult, input: ManualEvide
 
   return assertReviewResult({
     ...nextReview,
-    memo: { ...nextReview.memo, markdown: replaceManualEvidenceLinkLog(nextReview.memo.markdown, nextReview) },
+    memo: { ...nextReview.memo, markdown: appendReviewerAuditLogs(nextReview.memo.markdown, nextReview) },
   });
 }
