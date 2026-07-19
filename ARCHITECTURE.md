@@ -153,3 +153,7 @@ PDF extraction is intentionally client-side and local for hackathon reliability.
 ## Seventh-iteration reviewer overrides
 
 `lib/reviewerOverrides.ts` adds a human-judgment layer on top of the deterministic evidence graph. A reviewer can adjust a claim status and confidence only with an explanatory note. The helper records previous/new status, previous/new confidence, timestamp, note, and override ID on the claim. It also appends a provenance-log entry and a `Reviewer Override Log` section to the memo. This does not silently recompute the rule-based evaluation cards; if new evidence should alter scoring, the reviewer should add evidence and rerun the analysis.
+
+## Eighth-iteration printable memo export
+
+`lib/memoHtmlExport.ts` turns the generated Markdown memo into a standalone HTML document with safe escaping, print styles, a recommendation header, human-review boundary, selected fund scoring profile, claim-evidence appendix, and evidence appendix. The browser download path uses the same local `downloadText` helper as Markdown and audit JSON exports, so no server-side rendering or external document service is required.

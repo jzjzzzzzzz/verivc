@@ -110,7 +110,11 @@ On **New Review**, enter a public GitHub repository URL and click **Analyze GitH
 
 Open a contradicted or insufficient claim. In **Reviewer override**, change the status or confidence, add a reason such as `Partner reviewed updated Stripe export; claim is partially supported pending signed customer list`, and save. Show that the override appears in the claim history, memo, and audit JSON. Explain that adding new evidence and rerunning is still the path for rule-based rescoring.
 
-## 15. Fund profile weighting
+## 15. Print-ready memo export
+
+Open **Memo** and click **Download HTML**. Explain that the file is a standalone partner-review memo with print styles, recommendation summary, fund profile, claim-evidence appendix, evidence appendix, and reviewer override log. Mention that audit JSON remains the full machine-readable record.
+
+## 16. Fund profile weighting
 
 Open GrainLoop, then switch the **Fund scoring profile** selector between:
 

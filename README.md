@@ -12,7 +12,7 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 - Detects contradictions and gaps such as unsupported rapid growth, weak market sizing, “no competitors” conflicts, and production-readiness claims without technical proof.
 - Scores diligence categories with deterministic, visible rules.
 - Generates founder follow-up questions grouped by diligence area.
-- Produces a Markdown investment memo with evidence IDs, limitations, conditions, reviewer override log, and a restrained human-review recommendation.
+- Produces Markdown and print-ready HTML investment memos with evidence IDs, limitations, conditions, reviewer override log, and a restrained human-review recommendation.
 - Runs fully in deterministic demo mode without paid APIs; optional GitHub analysis uses only unauthenticated public GitHub API calls with timeouts.
 
 ## Why it is different
@@ -82,6 +82,7 @@ npm run test:rendered  # build + server-render smoke test
 - `lib/pdfExtraction.ts` — browser-side PDF upload validation, local text extraction, page-label formatting, truncation handling, and filename sanitization.
 - `lib/githubAnalysis.ts` — public GitHub repository URL parsing, API snapshot fetching, timeout handling, and evidence text formatting.
 - `lib/reviewerOverrides.ts` — reviewer claim override validation, memo addendum generation, and audit-trail preservation.
+- `lib/memoHtmlExport.ts` — standalone printable HTML memo generation with safe escaping, print CSS, and claim/evidence appendices.
 - `app/components/VeriVCApp.tsx` — local review workflow, dashboard, intake, claim-evidence explorer, evidence vault, scorecards, questions, and memo export.
 
 ## Privacy and safety notes
@@ -150,3 +151,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Reviewer claim overrides:** investors can change a claim status and confidence from the claim explorer with a required reason.
 - **Audit-preserved human judgment:** overrides append to claim notes, provenance log, audit JSON, and the Markdown memo override log.
 - **Human oversight boundary:** overrides are visible human annotations; adding evidence and rerunning remains the path for rule-based rescoring.
+
+## Added in the eighth iteration
+
+- **Print-ready HTML memo:** the Memo tab now downloads a standalone `.html` investment memo with print CSS.
+- **Partner-review appendix:** HTML exports include recommendation summary, fund scoring profile, claim-evidence table, evidence appendix, and human-review boundary.
+- **Safe rendering:** memo text is HTML-escaped before export to avoid raw markup injection in downloaded files.

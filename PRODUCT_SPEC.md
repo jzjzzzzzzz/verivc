@@ -17,7 +17,7 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 5. Score diligence categories with visible rules.
 6. Generate red flags, missing information, founder questions, memo, and recommendation.
 7. Inspect why each conclusion was produced.
-8. Copy or download memo.
+8. Copy memo or download Markdown/print-ready HTML memo.
 
 ## Recommendation states
 
@@ -72,3 +72,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added reviewer-editable claim status and confidence controls.
 - Required an override reason and preserved previous/new values.
 - Added reviewer override history to claim detail, memo export, provenance log, and audit package JSON.
+
+## Eighth-iteration requirements completed
+
+- Added standalone HTML memo export.
+- Added print CSS, recommendation summary, claim/evidence appendices, selected scoring profile, and human-review boundary to the HTML memo.
+- Added escaping tests to prevent raw HTML injection in exported memos.

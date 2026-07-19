@@ -47,3 +47,9 @@
 - Reviewer claim overrides are human annotations, not automatic verification and not a substitute for primary evidence.
 - Claim overrides update the claim record, memo, and audit trail; category scorecards remain rule-based unless evidence is added and the review is rerun.
 - Override reasons should not contain sensitive information unless the local audit package is handled securely.
+
+## Eighth-iteration limitations
+
+- HTML memo export is a static local file; it is not cryptographically signed and does not prove the audit package was unmodified.
+- Print layout depends on the reviewer browser/PDF printer settings.
+- The HTML memo summarizes appendices; reviewers should keep the full audit JSON for complete machine-readable provenance.
