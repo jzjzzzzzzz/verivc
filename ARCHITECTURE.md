@@ -143,6 +143,11 @@ The UI can export a JSON audit package with schema version, export timestamp, an
 This keeps fund-thesis customization explainable while preserving the evidence-first review graph.
 
 
+
+## Eleventh-iteration partner review checklist
+
+`lib/reviewChecklist.ts` derives a partner-review handoff checklist from the existing `ReviewResult` without mutating the evidence graph. It checks material claim coverage, contradiction clearance, traction primary proof, market support, technical credibility, team evidence, legal/regulatory review boundary, and memo handoff completeness. Each checklist item carries a status (`ready`, `needs_attention`, `missing`, or `blocked`), priority, explanation, related claim IDs, evidence IDs, and a next action. The Overview UI renders the checklist before scorecards so partners see whether the review package is discussion-ready before reading the memo.
+
 ## Tenth-iteration local share payload handoff
 
 `lib/sharePackage.ts` wraps the existing audit package JSON in a `verivc-share:v1:` base64url text payload. The Memo tab copies this payload to the clipboard; the dashboard import panel decodes it, checks the prefix and size guard, validates UTF-8 JSON, then reuses `parseAuditPackageJson` so share imports follow the same schema/version/review-shape checks as file imports. The payload is deliberately local-only and convenience-oriented: it is not encrypted, signed, cloud-hosted, or an authorization artifact.

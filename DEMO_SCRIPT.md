@@ -132,3 +132,7 @@ Open GrainLoop, then switch the **Fund scoring profile** selector between:
 - Technical angel
 
 Show that the readiness score and weighted positives change, but the claim-evidence graph and base recommendation remain traceable. Open the memo and point out the appended fund scoring profile section.
+
+## 19. Partner review checklist
+
+Open Aurelia AI and point to the **Partner review checklist** at the top of Overview. Show that the checklist is **blocked** because material contradictions and weak evidence coverage remain unresolved. Then open GrainLoop and show the higher checklist completion score with more ready gates. Emphasize that this is a handoff readiness checklist, not an autonomous investment approval.

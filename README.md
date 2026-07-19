@@ -15,6 +15,7 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 - Produces Markdown and print-ready HTML investment memos with evidence IDs, limitations, conditions, reviewer override log, and a restrained human-review recommendation.
 - Runs fully in deterministic demo mode without paid APIs; optional GitHub analysis uses only unauthenticated public GitHub API calls with timeouts.
 - Compares deterministic demo reviews side-by-side to show why evidence quality beats pitch polish.
+- Adds a Partner Review Checklist that turns the evidence graph into explicit handoff gates: ready, needs attention, missing, or blocked.
 - Supports local review handoff by copying a `verivc-share:v1:` payload that another reviewer can paste into the dashboard import panel without a cloud account.
 
 ## Why it is different
@@ -86,6 +87,7 @@ npm run test:rendered  # build + server-render smoke test
 - `lib/reviewerOverrides.ts` — reviewer claim override validation, memo addendum generation, and audit-trail preservation.
 - `lib/memoHtmlExport.ts` — standalone printable HTML memo generation with safe escaping, print CSS, and claim/evidence appendices.
 - `lib/reviewComparison.ts` — side-by-side review comparison logic for readiness, contradictions, red flags, evidence completeness, traction, and technical credibility.
+- `lib/reviewChecklist.ts` — partner-review checklist rules for material evidence coverage, contradictions, traction proof, market support, technical credibility, team evidence, legal review, and memo handoff.
 - `lib/sharePackage.ts` — offline `verivc-share:v1:` payload encoding and decoding around the validated audit package schema.
 - `app/components/VeriVCApp.tsx` — local review workflow, dashboard, intake, claim-evidence explorer, evidence vault, scorecards, questions, and memo export.
 
@@ -175,3 +177,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Local share payload:** the Memo tab can copy a `verivc-share:v1:` text payload containing the validated audit package.
 - **Paste-to-import handoff:** the dashboard can import pasted share payloads with prefix, size, UTF-8, JSON, schema, and review-shape validation.
 - **No cloud dependency:** share payloads are local convenience artifacts, not encrypted collaboration links or investment authorization records.
+
+## Added in the eleventh iteration
+
+- **Partner Review Checklist:** Overview now shows a checklist completion score and explicit handoff state.
+- **Review gates:** material evidence coverage, contradiction clearance, traction proof, market support, technology credibility, team evidence, legal boundary, and memo handoff are each marked ready/attention/missing/blocked.
+- **Explainable next actions:** every checklist item shows related claim IDs, evidence IDs, rationale, and the next action before partner discussion.

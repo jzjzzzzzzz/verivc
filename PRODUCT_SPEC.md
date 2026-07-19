@@ -91,3 +91,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added `verivc-share:v1:` copy/paste payload generation for completed reviews.
 - Added dashboard share payload import with schema validation and clear malformed-payload errors.
 - Documented that share payloads are local convenience artifacts only; they do not encrypt, sign, host, or authorize diligence content.
+
+## Eleventh-iteration requirements completed
+
+- Added partner-review checklist engine and Overview panel.
+- Added deterministic checklist gates for evidence coverage, contradictions, traction proof, market support, technology credibility, team evidence, legal/regulatory boundary, and memo handoff.
+- Added tests proving the polished risky demo is blocked while the better-supported demo produces a stronger checklist score.
