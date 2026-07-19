@@ -17,6 +17,7 @@ import { addManualClaim, editClaimMetadata, type AddManualClaimInput, type EditC
 import { applyManualEvidenceLink, type ManualEvidenceLinkInput, type ManualEvidenceLinkMode, type ManualEvidenceLinkAction } from "@/lib/evidenceLinker";
 import { refreshDerivedAnalysis } from "@/lib/refreshReview";
 import { buildAuditTimeline, summarizeAuditTimeline, type AuditTimelineSeverity } from "@/lib/auditTimeline";
+import { assessAnalysisFreshness } from "@/lib/analysisFreshness";
 import { claimCategories, type CategoryEvaluation, type Claim, type Evidence, type ReviewResult, type StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -738,6 +739,7 @@ function ReviewWorkspace({
   const scoringProfile = getScoringProfile(profileId);
   const weightedSummary = summarizeWeightedRecommendation(review, scoringProfile);
   const recTone = recommendationTone(review.recommendation.state);
+  const freshness = useMemo(() => assessAnalysisFreshness(review), [review]);
   return (
     <section className="workspace" aria-labelledby="workspace-title">
       <div className="workspace-top">
@@ -746,7 +748,7 @@ function ReviewWorkspace({
       </div>
       <div className="decision-band">
         <div className="readiness"><span>Readiness score</span><strong>{weightedSummary.weighted_readiness_score}</strong><small>/100 weighted</small></div>
-        <div><Badge tone={recTone}>{recommendationLabels[review.recommendation.state]}</Badge><p>{weightedSummary.explanation} Base recommendation remains {review.recommendation.state}.</p></div>
+        <div><Badge tone={recTone}>{recommendationLabels[review.recommendation.state]}</Badge><p>{weightedSummary.explanation} Base recommendation remains {review.recommendation.state}.</p><div className="freshness-line"><Badge tone={freshness.status === "fresh" ? "green" : "amber"}>{freshness.status.replaceAll("_", " ")}</Badge><small>{freshness.summary}</small></div></div>
         <div><Badge tone={review.recommendation.confidence === "high" ? "green" : review.recommendation.confidence === "medium" ? "blue" : "amber"}>{review.recommendation.confidence} confidence</Badge><p>{review.recommendation.human_review_note}</p><p className="refresh-note">Refresh after manual claim or evidence edits to rebuild scorecards, questions, recommendation, and memo from the current graph.</p></div>
       </div>
       {review.last_refresh_diff ? <RefreshDiffPanel review={review} /> : null}
