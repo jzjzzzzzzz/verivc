@@ -12,6 +12,7 @@ import { buildPrintableMemoHtml, printableMemoFileName } from "@/lib/memoHtmlExp
 import { compareReviews } from "@/lib/reviewComparison";
 import { createSharePayload, parseSharePayload, sharePayloadSummary } from "@/lib/sharePackage";
 import { buildPartnerReviewChecklist, type ChecklistStatus } from "@/lib/reviewChecklist";
+import { buildMemoCoverageSummary, type MemoCoverageStatus } from "@/lib/memoCoverage";
 import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -75,6 +76,14 @@ function checklistTone(status: ChecklistStatus): "green" | "amber" | "red" | "bl
   if (status === "needs_attention") return "blue";
   if (status === "missing") return "amber";
   if (status === "blocked") return "red";
+  return "neutral";
+}
+
+function memoCoverageTone(status: MemoCoverageStatus): "green" | "amber" | "red" | "blue" | "neutral" {
+  if (status === "strong_evidence") return "green";
+  if (status === "mixed_evidence") return "blue";
+  if (status === "weak_evidence") return "amber";
+  if (status === "inference_only") return "neutral";
   return "neutral";
 }
 
@@ -484,6 +493,7 @@ function ManualEvidenceForm({ onAddEvidence, nextIndex }: { onAddEvidence: (evid
 
 function MemoPanel({ review, weightedSummary }: { review: ReviewResult; weightedSummary: ReturnType<typeof summarizeWeightedRecommendation> }) {
   const [copied, setCopied] = useState<"memo" | "share" | "error">();
+  const coverage = useMemo(() => buildMemoCoverageSummary(review), [review]);
   const downloadMemo = () => {
     downloadText(`${review.profile.company_name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-verivc-memo.md`, review.memo.markdown + profileMemoAddendum(weightedSummary), "text/markdown;charset=utf-8");
   };
@@ -512,7 +522,49 @@ function MemoPanel({ review, weightedSummary }: { review: ReviewResult; weighted
         {copied === "error" ? <Badge tone="red">Clipboard unavailable</Badge> : null}
       </div>
       <p className="file-note">Local share payloads contain the full audit package as encoded text. They are not encrypted or cloud-hosted.</p>
+      <MemoCoveragePanel coverage={coverage} />
       <pre className="memo-box">{review.memo.markdown + profileMemoAddendum(weightedSummary)}</pre>
+    </section>
+  );
+}
+
+function MemoCoveragePanel({ coverage }: { coverage: ReturnType<typeof buildMemoCoverageSummary> }) {
+  return (
+    <section className="memo-coverage-panel" aria-labelledby="memo-coverage-title">
+      <div className="section-heading compact-heading">
+        <div>
+          <span id="memo-coverage-title">Memo evidence coverage</span>
+          <small>Section-level indicators show which memo conclusions are evidence-backed versus inference-heavy</small>
+        </div>
+        <Badge tone={coverage.average_coverage_score >= 72 ? "green" : coverage.average_coverage_score >= 46 ? "blue" : "amber"}>{coverage.average_coverage_score}/100 avg</Badge>
+      </div>
+      <p>{coverage.summary}</p>
+      <div className="memo-coverage-counts">
+        <span><strong>{coverage.strong_sections}</strong> strong</span>
+        <span><strong>{coverage.mixed_sections}</strong> mixed</span>
+        <span><strong>{coverage.weak_sections}</strong> weak</span>
+        <span><strong>{coverage.inference_only_sections}</strong> inference</span>
+      </div>
+      <div className="memo-coverage-grid">
+        {coverage.sections.map((section) => (
+          <details className={cls("memo-coverage-card", `memo-coverage-${section.status}`)} key={section.section_key}>
+            <summary>
+              <div>
+                <strong>{section.title}</strong>
+                <small>{section.coverage_score}/100 · {section.confidence} confidence</small>
+              </div>
+              <Badge tone={memoCoverageTone(section.status)}>{section.status.replaceAll("_", " ")}</Badge>
+            </summary>
+            <div className="memo-coverage-detail">
+              <p>{section.explanation}</p>
+              <small>Claims: {section.related_claim_ids.join(", ") || "none"} · Evidence: {section.evidence_ids.join(", ") || "none"}</small>
+              {section.contradiction_claim_ids.length ? <small>Contradictions: {section.contradiction_claim_ids.join(", ")}</small> : null}
+              {section.unsupported_claim_ids.length ? <small>Unsupported: {section.unsupported_claim_ids.join(", ")}</small> : null}
+              {section.missing_information.length ? <ul>{section.missing_information.slice(0, 3).map((item) => <li key={item}>{item}</li>)}</ul> : null}
+            </div>
+          </details>
+        ))}
+      </div>
     </section>
   );
 }
