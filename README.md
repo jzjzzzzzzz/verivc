@@ -20,6 +20,7 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 - Lets reviewers manually add or edit claims with required notes, provenance entries, and memo edit logs.
 - Lets reviewers manually link or unlink evidence as supporting or contradicting a claim while preserving bidirectional provenance.
 - Refreshes derived scorecards, red flags, founder questions, recommendation, and memo from the current human-edited claim/evidence graph.
+- Shows an Audit Timeline for intake, evidence capture, reviewer actions, refreshes, and export readiness.
 - Supports local review handoff by copying a `verivc-share:v1:` payload that another reviewer can paste into the dashboard import panel without a cloud account.
 
 ## Why it is different
@@ -96,6 +97,7 @@ npm run test:rendered  # build + server-render smoke test
 - `lib/claimEditor.ts` — manual reviewer claim add/edit helpers with validation, provenance entries, and memo edit-log preservation.
 - `lib/evidenceLinker.ts` — manual evidence-to-claim support/contradiction link helper with bidirectional graph updates and memo link-log preservation.
 - `lib/refreshReview.ts` — deterministic refresh path that rebuilds derived analyses from current claim/evidence records while preserving reviewer audit logs.
+- `lib/auditTimeline.ts` — audit event builder for intake, evidence capture, reviewer edits, evidence links, refreshes, and exportability.
 - `lib/reviewerAuditLogs.ts` — shared memo addendum builder for overrides, claim edits, and evidence links.
 - `lib/sharePackage.ts` — offline `verivc-share:v1:` payload encoding and decoding around the validated audit package schema.
 - `app/components/VeriVCApp.tsx` — local review workflow, dashboard, intake, claim-evidence explorer, evidence vault, scorecards, questions, and memo export.
@@ -216,3 +218,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Derived analysis refresh:** the review workspace now includes **Refresh derived analysis** after manual claim/evidence edits.
 - **Current graph recomputation:** refresh rebuilds category evaluations, strengths, red flags, missing information, founder questions, recommendation, and memo from the edited claim/evidence graph.
 - **Audit-log continuity:** reviewer override, claim edit, and evidence link logs are regenerated consistently in the refreshed memo and remain in audit JSON/share payloads.
+
+## Added in the sixteenth iteration
+
+- **Audit Timeline:** the review workspace now includes an Audit Timeline tab.
+- **Review process traceability:** timeline events cover intake, evidence capture, deterministic analysis steps, reviewer overrides, manual claim edits, manual evidence links, refreshes, and export readiness.
+- **Linked audit context:** each event shows related claim IDs and evidence IDs where available so partner reviewers can inspect why a conclusion changed.

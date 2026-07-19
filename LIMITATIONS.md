@@ -63,3 +63,9 @@
 - Side-by-side comparison is designed for relative triage and demo storytelling, not portfolio ranking or automatic investment selection.
 - The stronger evidence case can still require conditions, manual review, or primary documents before partner review.
 - Comparing two companies across different sectors or stages requires human context beyond the visible heuristics.
+
+## Sixteenth-iteration limitations
+
+- The Audit Timeline is a local reconstruction from the current review record; it is not cryptographically signed or tamper-proof.
+- Timestamps may be absent for deterministic setup steps or imported records that lack event-level times.
+- Timeline events explain provenance and workflow history, but they do not authenticate the underlying evidence.

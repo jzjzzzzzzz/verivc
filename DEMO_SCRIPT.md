@@ -152,3 +152,7 @@ Open **Evidence**, expand **Manual claim link** on an evidence card, select a cl
 ## 23. Refresh derived analysis after human graph edits
 
 After adding a manual claim or manual evidence link, click **Refresh derived analysis** in the review workspace action bar. Show that scorecards, red flags, founder questions, recommendation, and memo rebuild from the current claim/evidence graph, while `Reviewer Override Log`, `Reviewer Claim Edit Log`, and `Reviewer Evidence Link Log` remain visible. Emphasize that refresh is explicit human-supervised recomputation, not autonomous investment approval.
+
+## 24. Audit timeline
+
+Open the new **Audit Timeline** tab after running a demo or making a manual edit. Show the summary counters for human actions, risk-relevant evidence, and refreshes. Expand a reviewer override, manual claim edit, evidence link, or refresh event and point out the related claim IDs and evidence IDs. Close with: `VeriVC does not just output a memo; it preserves how the memo was produced.`

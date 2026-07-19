@@ -190,3 +190,7 @@ PDF extraction is intentionally client-side and local for hackathon reliability.
 ## Fifteenth-iteration derived analysis refresh
 
 `lib/refreshReview.ts` recomputes the derived portions of an existing `ReviewResult` from the current claim/evidence graph. It preserves review ID, created timestamp, intake, claim records, evidence records, reviewer overrides, manual claim/evidence notes, and provenance, then rebuilds `profile`, `evaluations`, `strengths`, `red_flags`, `missing_information`, `founder_questions`, `recommendation`, and `memo` using the same deterministic engine functions. `lib/reviewerAuditLogs.ts` centralizes memo addendum generation so override, claim-edit, and evidence-link logs survive refresh without duplication. The UI exposes this as **Refresh derived analysis** in the workspace action bar.
+
+## Sixteenth-iteration audit timeline
+
+`lib/auditTimeline.ts` converts a completed `ReviewResult` into ordered audit events. It combines provenance-log entries, evidence capture metadata, reviewer override records, manual claim edit notes, manual evidence link notes, refresh actions, and current export readiness into a single timeline. Events carry type, severity, title, description, optional timestamp, related claim IDs, and related evidence IDs. The workspace Audit Timeline tab renders these events as expandable cards, making human and system actions visible without mutating the underlying review graph.

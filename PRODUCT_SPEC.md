@@ -121,3 +121,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added derived-analysis refresh engine and tests.
 - Added workspace action to rebuild scorecards, red flags, founder questions, recommendation, and memo after human claim/evidence graph edits.
 - Centralized reviewer memo audit logs so override, claim edit, and evidence link trails persist through refresh without duplication.
+
+## Sixteenth-iteration requirements completed
+
+- Added audit timeline engine and tests.
+- Added Review Workspace Audit Timeline tab for intake, evidence capture, reviewer actions, refreshes, and export readiness.
+- Added claim/evidence IDs to timeline events where available for partner-review traceability.
