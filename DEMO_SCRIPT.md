@@ -164,3 +164,7 @@ After making an override or manual evidence link, click **Refresh derived analys
 ## 26. Analysis freshness indicator
 
 After a reviewer override or manual evidence link, point to the decision band freshness badge. Show that VeriVC marks the analysis as needing refresh until **Refresh derived analysis** is clicked. Explain that this prevents silent mismatch between human-edited evidence graphs and exported conclusions.
+
+## 27. Timeline quick jumps
+
+Open **Audit Timeline**, expand an event with claim or evidence IDs, and click **Open CL-...** or **Open EV-...**. VeriVC switches to the matching tab, scrolls to the record, and highlights it so reviewers can move from process history to source material quickly.

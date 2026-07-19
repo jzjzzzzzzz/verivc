@@ -22,6 +22,7 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 - Refreshes derived scorecards, red flags, founder questions, recommendation, and memo from the current human-edited claim/evidence graph.
 - Shows an Audit Timeline for intake, evidence capture, reviewer actions, refreshes, and export readiness.
 - Shows and exports a Last Refresh Diff explaining how scores, red flags, questions, and recommendations changed after recomputation.
+- Lets reviewers jump from Audit Timeline events directly to related claim/evidence cards.
 - Flags when manual edits make derived analysis stale so reviewers know to refresh before exporting.
 - Supports local review handoff by copying a `verivc-share:v1:` payload that another reviewer can paste into the dashboard import panel without a cloud account.
 
@@ -79,7 +80,8 @@ npm run lint           # ESLint
 npm run typecheck      # TypeScript check
 npm run format:check   # lightweight source formatting guard
 npm test               # unit/integration tests for schemas and review engine
-npm run build          # production build
+npm run build          # local Sites/Vinext production build
+npx next build         # Vercel-compatible Next.js production build
 npm run test:rendered  # build + server-render smoke test
 ```
 
@@ -239,3 +241,11 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 
 - **Analysis freshness indicator:** the workspace now labels whether deterministic outputs are fresh relative to timestamped manual edits.
 - **Refresh guidance:** after reviewer overrides, manual claim edits, or manual evidence links, VeriVC prompts reviewers to refresh derived analysis before relying on scores or memo exports.
+
+## Vercel deployment
+
+The local hackathon app remains Sites/Vinext-compatible, and `vercel.json` provides a Vercel path that runs `npx next build`. Deploy with:
+
+```bash
+vercel --prod
+```
