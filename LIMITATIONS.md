@@ -53,3 +53,9 @@
 - HTML memo export is a static local file; it is not cryptographically signed and does not prove the audit package was unmodified.
 - Print layout depends on the reviewer browser/PDF printer settings.
 - The HTML memo summarizes appendices; reviewers should keep the full audit JSON for complete machine-readable provenance.
+
+## Ninth-iteration limitations
+
+- Side-by-side comparison is designed for relative triage and demo storytelling, not portfolio ranking or automatic investment selection.
+- The stronger evidence case can still require conditions, manual review, or primary documents before partner review.
+- Comparing two companies across different sectors or stages requires human context beyond the visible heuristics.

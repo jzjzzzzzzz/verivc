@@ -14,6 +14,7 @@ Point to:
 
 - New Review
 - two deterministic demo companies
+- Compare demos
 - evidence-before-opinion principles
 
 Say that the demo works without paid APIs.
@@ -114,7 +115,11 @@ Open a contradicted or insufficient claim. In **Reviewer override**, change the 
 
 Open **Memo** and click **Download HTML**. Explain that the file is a standalone partner-review memo with print styles, recommendation summary, fund profile, claim-evidence appendix, evidence appendix, and reviewer override log. Mention that audit JSON remains the full machine-readable record.
 
-## 16. Fund profile weighting
+## 16. Side-by-side demo comparison
+
+Return to the dashboard and click **Compare demos**. Show that Aurelia AI is more polished but has more contradictions and severe red flags, while GrainLoop has stronger evidence completeness and fewer contradictions. Use the line `Evidence beats polish` to summarize the core product message.
+
+## 17. Fund profile weighting
 
 Open GrainLoop, then switch the **Fund scoring profile** selector between:
 

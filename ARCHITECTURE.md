@@ -157,3 +157,7 @@ PDF extraction is intentionally client-side and local for hackathon reliability.
 ## Eighth-iteration printable memo export
 
 `lib/memoHtmlExport.ts` turns the generated Markdown memo into a standalone HTML document with safe escaping, print styles, a recommendation header, human-review boundary, selected fund scoring profile, claim-evidence appendix, and evidence appendix. The browser download path uses the same local `downloadText` helper as Markdown and audit JSON exports, so no server-side rendering or external document service is required.
+
+## Ninth-iteration review comparison
+
+`lib/reviewComparison.ts` summarizes two completed `ReviewResult` objects into comparable evidence signals and deterministic rows. The comparison view does not create a new investment recommendation; it explains why one evidence graph is stronger than another by comparing supported claims, contradictions, severe red flags, evidence completeness, traction evidence, and technical credibility. The dashboard demo path constructs both deterministic demo reviews locally and shows the comparison workspace without external services.

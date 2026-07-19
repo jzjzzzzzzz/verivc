@@ -17,7 +17,7 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 5. Score diligence categories with visible rules.
 6. Generate red flags, missing information, founder questions, memo, and recommendation.
 7. Inspect why each conclusion was produced.
-8. Copy memo or download Markdown/print-ready HTML memo.
+8. Copy memo, download Markdown/print-ready HTML memo, or compare deterministic reviews side-by-side.
 
 ## Recommendation states
 
@@ -78,3 +78,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added standalone HTML memo export.
 - Added print CSS, recommendation summary, claim/evidence appendices, selected scoring profile, and human-review boundary to the HTML memo.
 - Added escaping tests to prevent raw HTML injection in exported memos.
+
+## Ninth-iteration requirements completed
+
+- Added side-by-side deterministic demo comparison.
+- Added comparison engine for readiness, recommendation, supported claims, contradictions, red flags, evidence completeness, traction, and technical credibility.
+- Added dashboard comparison entry point and presentation-ready takeaway.
