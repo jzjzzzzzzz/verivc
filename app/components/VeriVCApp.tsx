@@ -749,6 +749,7 @@ function ReviewWorkspace({
         <div><Badge tone={recTone}>{recommendationLabels[review.recommendation.state]}</Badge><p>{weightedSummary.explanation} Base recommendation remains {review.recommendation.state}.</p></div>
         <div><Badge tone={review.recommendation.confidence === "high" ? "green" : review.recommendation.confidence === "medium" ? "blue" : "amber"}>{review.recommendation.confidence} confidence</Badge><p>{review.recommendation.human_review_note}</p><p className="refresh-note">Refresh after manual claim or evidence edits to rebuild scorecards, questions, recommendation, and memo from the current graph.</p></div>
       </div>
+      {review.last_refresh_diff ? <RefreshDiffPanel review={review} /> : null}
       <ScoringProfilePanel profileId={profileId} onProfileChange={setProfileId} summary={weightedSummary} />
       <nav className="tabs" aria-label="Review sections">
         {[
@@ -764,6 +765,47 @@ function ReviewWorkspace({
   );
 }
 
+
+
+function RefreshDiffPanel({ review }: { review: ReviewResult }) {
+  const diff = review.last_refresh_diff;
+  if (!diff) return null;
+  const deltaTone = diff.readiness_delta > 0 ? "green" : diff.readiness_delta < 0 ? "red" : "neutral";
+  return (
+    <section className="refresh-diff-panel" aria-labelledby="refresh-diff-title">
+      <div>
+        <div className="section-heading compact-heading">
+          <span id="refresh-diff-title">Last refresh diff</span>
+          <small>{new Date(diff.refreshed_at).toLocaleString()}</small>
+        </div>
+        <p>{diff.summary}</p>
+      </div>
+      <div className="refresh-diff-metrics">
+        <div><span>Recommendation</span><strong>{recommendationLabels[diff.previous_recommendation]} → {recommendationLabels[diff.next_recommendation]}</strong></div>
+        <div><span>Readiness</span><strong>{diff.previous_readiness_score} → {diff.next_readiness_score}</strong><Badge tone={deltaTone}>{diff.readiness_delta >= 0 ? "+" : ""}{diff.readiness_delta}</Badge></div>
+        <div><span>Questions</span><strong>{diff.founder_question_delta >= 0 ? "+" : ""}{diff.founder_question_delta}</strong></div>
+        <div><span>Missing info</span><strong>{diff.missing_information_delta >= 0 ? "+" : ""}{diff.missing_information_delta}</strong></div>
+      </div>
+      {diff.evaluation_changes.length ? (
+        <details className="refresh-diff-details">
+          <summary><strong>Changed scorecards</strong><Badge tone="blue">{diff.evaluation_changes.length}</Badge></summary>
+          <div className="refresh-change-list">
+            {diff.evaluation_changes.slice(0, 8).map((change) => <span key={change.dimension}>{change.dimension.replaceAll("_", " ")} · {change.before_score} → {change.after_score} ({change.delta >= 0 ? "+" : ""}{change.delta})</span>)}
+          </div>
+        </details>
+      ) : null}
+      {(diff.red_flags_added.length || diff.red_flags_resolved.length) ? (
+        <details className="refresh-diff-details">
+          <summary><strong>Red flag movement</strong><Badge tone={diff.red_flags_added.length ? "red" : "green"}>{diff.red_flags_added.length} added · {diff.red_flags_resolved.length} resolved</Badge></summary>
+          <div className="refresh-change-list">
+            {diff.red_flags_added.map((item) => <span className="score-low" key={`added-${item}`}>Added: {item}</span>)}
+            {diff.red_flags_resolved.map((item) => <span className="score-good" key={`resolved-${item}`}>Resolved: {item}</span>)}
+          </div>
+        </details>
+      ) : null}
+    </section>
+  );
+}
 
 function AuditTimelinePanel({ review }: { review: ReviewResult }) {
   const events = useMemo(() => buildAuditTimeline(review), [review]);
