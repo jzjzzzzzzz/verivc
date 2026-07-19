@@ -8,6 +8,7 @@ import { getScoringProfile, scoringProfiles, summarizeWeightedRecommendation, ty
 import { extractPdfTextFromFile } from "@/lib/pdfExtraction";
 import { fetchGithubSnapshotFromUrl, formatGithubSnapshot } from "@/lib/githubAnalysis";
 import { applyClaimReviewerOverride } from "@/lib/reviewerOverrides";
+import { buildPrintableMemoHtml, printableMemoFileName } from "@/lib/memoHtmlExport";
 import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -447,10 +448,13 @@ function MemoPanel({ review, weightedSummary }: { review: ReviewResult; weighted
   const downloadMemo = () => {
     downloadText(`${review.profile.company_name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-verivc-memo.md`, review.memo.markdown + profileMemoAddendum(weightedSummary), "text/markdown;charset=utf-8");
   };
+  const downloadPrintableHtml = () => {
+    downloadText(printableMemoFileName(review), buildPrintableMemoHtml(review, weightedSummary), "text/html;charset=utf-8");
+  };
   return (
     <section className="workspace-section" aria-labelledby="memo-title">
-      <div className="section-heading"><span id="memo-title">Investment memo</span><small>Markdown export includes selected fund scoring profile</small></div>
-      <div className="memo-actions"><button className="secondary-button" onClick={async () => { await navigator.clipboard.writeText(review.memo.markdown + profileMemoAddendum(weightedSummary)); setCopied(true); }}>Copy memo</button><button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button><button className="primary-button" onClick={downloadMemo}>Download Markdown</button>{copied ? <Badge tone="green">Copied</Badge> : null}</div>
+      <div className="section-heading"><span id="memo-title">Investment memo</span><small>Markdown and print-ready HTML exports include selected fund scoring profile</small></div>
+      <div className="memo-actions"><button className="secondary-button" onClick={async () => { await navigator.clipboard.writeText(review.memo.markdown + profileMemoAddendum(weightedSummary)); setCopied(true); }}>Copy memo</button><button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button><button className="secondary-button" onClick={downloadPrintableHtml}>Download HTML</button><button className="primary-button" onClick={downloadMemo}>Download Markdown</button>{copied ? <Badge tone="green">Copied</Badge> : null}</div>
       <pre className="memo-box">{review.memo.markdown + profileMemoAddendum(weightedSummary)}</pre>
     </section>
   );
