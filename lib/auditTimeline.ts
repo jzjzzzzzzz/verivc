@@ -82,7 +82,7 @@ function evidenceCaptureEvents(evidence: Evidence[]): AuditTimelineEvent[] {
     occurred_at: item.captured_at,
     claim_ids: unique([...item.supports_claim_ids, ...item.contradicts_claim_ids]),
     evidence_ids: [item.evidence_id],
-  })).map((event, index) => ({ ...event, event_id: `${event.event_id}-${index + 1}` }));
+  }));
 }
 
 function provenanceEvents(review: ReviewResult): AuditTimelineEvent[] {

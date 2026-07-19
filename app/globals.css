@@ -649,3 +649,46 @@ blockquote { margin: 0; padding: 12px; border-left: 3px solid var(--blue); backg
   color: var(--muted);
   font-size: 0.82rem;
 }
+
+.audit-timeline-panel { overflow: hidden; }
+.timeline-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 150px)) 1fr;
+  gap: 12px;
+  align-items: stretch;
+  margin-bottom: 18px;
+}
+.timeline-summary div, .timeline-summary p {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255,255,255,.62);
+  padding: 14px;
+}
+.timeline-summary strong { display: block; font-size: 1.9rem; letter-spacing: -0.06em; }
+.timeline-summary span, .timeline-summary p { color: var(--muted); }
+.timeline-list { position: relative; display: grid; gap: 10px; }
+.timeline-event {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255,255,255,.66);
+  overflow: hidden;
+}
+.timeline-event summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px;
+  cursor: pointer;
+}
+.timeline-event summary::-webkit-details-marker { display: none; }
+.timeline-event summary small, .timeline-detail small { color: var(--muted); }
+.timeline-event summary strong { display: block; margin-top: 4px; }
+.timeline-detail { padding: 0 15px 15px; }
+.timeline-human_action { border-color: rgba(107,72,215,.25); }
+.timeline-risk_relevant { border-color: rgba(192,53,53,.25); }
+.timeline-system_action { border-color: rgba(49,87,216,.25); }
+@media (max-width: 820px) {
+  .timeline-summary { grid-template-columns: 1fr; }
+}

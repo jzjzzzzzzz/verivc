@@ -16,6 +16,7 @@ import { buildMemoCoverageSummary, type MemoCoverageStatus } from "@/lib/memoCov
 import { addManualClaim, editClaimMetadata, type AddManualClaimInput, type EditClaimInput } from "@/lib/claimEditor";
 import { applyManualEvidenceLink, type ManualEvidenceLinkInput, type ManualEvidenceLinkMode, type ManualEvidenceLinkAction } from "@/lib/evidenceLinker";
 import { refreshDerivedAnalysis } from "@/lib/refreshReview";
+import { buildAuditTimeline, summarizeAuditTimeline, type AuditTimelineSeverity } from "@/lib/auditTimeline";
 import { claimCategories, type CategoryEvaluation, type Claim, type Evidence, type ReviewResult, type StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -94,6 +95,13 @@ function scoreTone(score: number) {
   if (score >= 72) return "score-good";
   if (score >= 52) return "score-mid";
   return "score-low";
+}
+
+function auditSeverityTone(severity: AuditTimelineSeverity): "green" | "amber" | "red" | "blue" | "neutral" | "purple" {
+  if (severity === "human_action") return "purple";
+  if (severity === "system_action") return "blue";
+  if (severity === "risk_relevant") return "red";
+  return "neutral";
 }
 
 function evidenceById(evidence: Evidence[]) {
@@ -725,7 +733,7 @@ function ReviewWorkspace({
   onLinkEvidence: (input: ManualEvidenceLinkInput) => void;
   onRefreshAnalysis: () => void;
 }) {
-  const [tab, setTab] = useState<"overview" | "claims" | "evidence" | "memo">("overview");
+  const [tab, setTab] = useState<"overview" | "claims" | "evidence" | "timeline" | "memo">("overview");
   const [profileId, setProfileId] = useState<ScoringProfileId>("balanced");
   const scoringProfile = getScoringProfile(profileId);
   const weightedSummary = summarizeWeightedRecommendation(review, scoringProfile);
@@ -744,13 +752,54 @@ function ReviewWorkspace({
       <ScoringProfilePanel profileId={profileId} onProfileChange={setProfileId} summary={weightedSummary} />
       <nav className="tabs" aria-label="Review sections">
         {[
-          ["overview", "Overview"], ["claims", "Claims"], ["evidence", "Evidence"], ["memo", "Memo"],
+          ["overview", "Overview"], ["claims", "Claims"], ["evidence", "Evidence"], ["timeline", "Audit Timeline"], ["memo", "Memo"],
         ].map(([id, label]) => <button key={id} className={cls(tab === id && "tab-active")} onClick={() => setTab(id as typeof tab)}>{label}</button>)}
       </nav>
       {tab === "overview" ? <Overview review={review} /> : null}
       {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} onOverrideClaim={onOverrideClaim} onAddManualClaim={onAddManualClaim} onEditClaim={onEditClaim} /> : null}
       {tab === "evidence" ? <EvidenceVault evidence={review.evidence} claims={review.claims} onAddEvidence={onAddEvidence} onLinkEvidence={onLinkEvidence} /> : null}
+      {tab === "timeline" ? <AuditTimelinePanel review={review} /> : null}
       {tab === "memo" ? <MemoPanel review={review} weightedSummary={weightedSummary} /> : null}
+    </section>
+  );
+}
+
+
+function AuditTimelinePanel({ review }: { review: ReviewResult }) {
+  const events = useMemo(() => buildAuditTimeline(review), [review]);
+  const summary = useMemo(() => summarizeAuditTimeline(events), [events]);
+  return (
+    <section className="workspace-section audit-timeline-panel" aria-labelledby="audit-timeline-title">
+      <div className="section-heading">
+        <div>
+          <span id="audit-timeline-title">Audit timeline</span>
+          <small>Trace how intake, evidence capture, reviewer actions, refreshes, and export readiness shaped this review</small>
+        </div>
+        <Badge tone={summary.human_actions ? "purple" : "blue"}>{summary.total_events} events</Badge>
+      </div>
+      <div className="timeline-summary">
+        <div><strong>{summary.human_actions}</strong><span>human actions</span></div>
+        <div><strong>{summary.risk_relevant}</strong><span>risk-relevant evidence</span></div>
+        <div><strong>{summary.refreshes}</strong><span>refreshes</span></div>
+        <p>{summary.summary}</p>
+      </div>
+      <div className="timeline-list">
+        {events.map((event) => (
+          <details className={cls("timeline-event", `timeline-${event.severity}`)} key={event.event_id}>
+            <summary>
+              <div>
+                <small>{event.occurred_at ? new Date(event.occurred_at).toLocaleString() : "No timestamp"}</small>
+                <strong>{event.title}</strong>
+              </div>
+              <Badge tone={auditSeverityTone(event.severity)}>{event.event_type.replaceAll("_", " ")}</Badge>
+            </summary>
+            <div className="timeline-detail">
+              <p>{event.description}</p>
+              <small>Claims: {event.claim_ids.join(", ") || "none"} · Evidence: {event.evidence_ids.join(", ") || "none"}</small>
+            </div>
+          </details>
+        ))}
+      </div>
     </section>
   );
 }
