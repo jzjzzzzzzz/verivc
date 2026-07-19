@@ -75,3 +75,8 @@
 - Last Refresh Diff compares the immediately previous stored review view with the refreshed deterministic output; it is not a full version-control history.
 - If a reviewer imports an older audit package or edits JSON outside the app, the diff only reflects fields present in that local record.
 - Diff explanations show what changed, not whether the changed evidence is authentic.
+
+## Eighteenth-iteration limitations
+
+- Freshness detection depends on timestamped in-app reviewer actions; external JSON edits or missing timestamps may reduce accuracy.
+- A fresh status only means the deterministic analysis was recomputed after known manual edits; it does not verify evidence authenticity.

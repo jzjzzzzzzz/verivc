@@ -198,3 +198,7 @@ PDF extraction is intentionally client-side and local for hackathon reliability.
 ## Seventeenth-iteration refresh diff
 
 `lib/reviewDiff.ts` compares a stale review snapshot with the refreshed review snapshot created by `refreshDerivedAnalysis`. The diff records previous/next recommendation, previous/next readiness score, readiness delta, confidence movement, scorecard dimension deltas, red flags added/resolved, founder-question delta, missing-information delta, and a plain-language summary. `ReviewResult.last_refresh_diff` stores the latest diff so browser storage, audit JSON, share payloads, workspace UI, and printable HTML exports all preserve the explanation of what changed during the last explicit recomputation.
+
+## Eighteenth-iteration analysis freshness
+
+`lib/analysisFreshness.ts` derives a freshness status from the current review record by comparing timestamped reviewer actions against the latest provenance-log refresh event. It returns `fresh`, `refresh_recommended`, or `never_refreshed_after_manual_edits` with a short summary. The workspace renders this status inside the decision band so reviewers can see whether displayed scorecards and memos are current after human graph edits.

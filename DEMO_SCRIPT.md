@@ -160,3 +160,7 @@ Open the new **Audit Timeline** tab after running a demo or making a manual edit
 ## 25. Last Refresh Diff
 
 After making an override or manual evidence link, click **Refresh derived analysis**. Point to **Last refresh diff** near the top of the workspace and read the summary aloud: recommendation movement, readiness delta, changed scorecards, red flags added or resolved, and question/missing-info deltas. Then download HTML memo and show that the same refresh diff is preserved in the partner export.
+
+## 26. Analysis freshness indicator
+
+After a reviewer override or manual evidence link, point to the decision band freshness badge. Show that VeriVC marks the analysis as needing refresh until **Refresh derived analysis** is clicked. Explain that this prevents silent mismatch between human-edited evidence graphs and exported conclusions.

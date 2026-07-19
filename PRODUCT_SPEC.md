@@ -133,3 +133,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added refresh diff engine and tests.
 - Added workspace Last Refresh Diff panel after explicit recomputation.
 - Added refresh diff appendix to printable HTML memo exports.
+
+## Eighteenth-iteration requirements completed
+
+- Added analysis freshness engine and tests.
+- Added workspace freshness indicator comparing manual action timestamps with the latest refresh.
+- Documented freshness limitations and demo flow.
