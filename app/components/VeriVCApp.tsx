@@ -10,6 +10,7 @@ import { fetchGithubSnapshotFromUrl, formatGithubSnapshot } from "@/lib/githubAn
 import { applyClaimReviewerOverride } from "@/lib/reviewerOverrides";
 import { buildPrintableMemoHtml, printableMemoFileName } from "@/lib/memoHtmlExport";
 import { compareReviews } from "@/lib/reviewComparison";
+import { createSharePayload, parseSharePayload, sharePayloadSummary } from "@/lib/sharePackage";
 import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -179,11 +180,24 @@ function Dashboard({ onDemo, onNew, onCompareDemos, recent, onOpenReview, onClea
 
 function AuditImportPanel({ onImportReview }: { onImportReview: (review: ReviewResult) => void }) {
   const [message, setMessage] = useState<{ tone: "green" | "red"; text: string }>();
+  const [shareText, setShareText] = useState("");
+
+  function importSharePayload() {
+    try {
+      const imported = parseSharePayload(shareText);
+      onImportReview(imported.review);
+      setShareText("");
+      setMessage({ tone: "green", text: `Imported ${imported.review.profile.company_name} from a local share payload.` });
+    } catch (error) {
+      setMessage({ tone: "red", text: error instanceof Error ? error.message : "Unable to import share payload." });
+    }
+  }
+
   return (
     <div className="audit-import-panel">
       <div>
         <strong>Import audit package</strong>
-        <p>Reopen a VeriVC JSON export with claims, evidence, memo, and provenance intact.</p>
+        <p>Reopen a VeriVC JSON export or pasted local share payload with claims, evidence, memo, and provenance intact.</p>
       </div>
       <label className="import-button">
         <input
@@ -205,6 +219,20 @@ function AuditImportPanel({ onImportReview }: { onImportReview: (review: ReviewR
         Choose JSON
       </label>
       {message ? <Badge tone={message.tone}>{message.text}</Badge> : null}
+      <form className="share-import-form" onSubmit={(event) => { event.preventDefault(); importSharePayload(); }}>
+        <label>Paste local share payload
+          <textarea
+            value={shareText}
+            onChange={(event) => setShareText(event.target.value)}
+            placeholder="verivc-share:v1:..."
+            aria-label="Paste VeriVC local share payload"
+          />
+        </label>
+        <div className="share-import-actions">
+          <button className="secondary-button" type="submit" disabled={!shareText.trim()}>Import share payload</button>
+          {shareText.trim() ? <small>{sharePayloadSummary(shareText.trim())}</small> : <small>Local-only handoff; use a secure channel for sensitive diligence data.</small>}
+        </div>
+      </form>
     </div>
   );
 }
@@ -446,17 +474,35 @@ function ManualEvidenceForm({ onAddEvidence, nextIndex }: { onAddEvidence: (evid
 }
 
 function MemoPanel({ review, weightedSummary }: { review: ReviewResult; weightedSummary: ReturnType<typeof summarizeWeightedRecommendation> }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<"memo" | "share" | "error">();
   const downloadMemo = () => {
     downloadText(`${review.profile.company_name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-verivc-memo.md`, review.memo.markdown + profileMemoAddendum(weightedSummary), "text/markdown;charset=utf-8");
   };
   const downloadPrintableHtml = () => {
     downloadText(printableMemoFileName(review), buildPrintableMemoHtml(review, weightedSummary), "text/html;charset=utf-8");
   };
+  const copySharePayload = async () => {
+    try {
+      await navigator.clipboard.writeText(createSharePayload(review));
+      setCopied("share");
+    } catch {
+      setCopied("error");
+    }
+  };
   return (
     <section className="workspace-section" aria-labelledby="memo-title">
       <div className="section-heading"><span id="memo-title">Investment memo</span><small>Markdown and print-ready HTML exports include selected fund scoring profile</small></div>
-      <div className="memo-actions"><button className="secondary-button" onClick={async () => { await navigator.clipboard.writeText(review.memo.markdown + profileMemoAddendum(weightedSummary)); setCopied(true); }}>Copy memo</button><button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button><button className="secondary-button" onClick={downloadPrintableHtml}>Download HTML</button><button className="primary-button" onClick={downloadMemo}>Download Markdown</button>{copied ? <Badge tone="green">Copied</Badge> : null}</div>
+      <div className="memo-actions">
+        <button className="secondary-button" onClick={async () => { await navigator.clipboard.writeText(review.memo.markdown + profileMemoAddendum(weightedSummary)); setCopied("memo"); }}>Copy memo</button>
+        <button className="secondary-button" onClick={copySharePayload}>Copy share payload</button>
+        <button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button>
+        <button className="secondary-button" onClick={downloadPrintableHtml}>Download HTML</button>
+        <button className="primary-button" onClick={downloadMemo}>Download Markdown</button>
+        {copied === "memo" ? <Badge tone="green">Memo copied</Badge> : null}
+        {copied === "share" ? <Badge tone="green">Share payload copied</Badge> : null}
+        {copied === "error" ? <Badge tone="red">Clipboard unavailable</Badge> : null}
+      </div>
+      <p className="file-note">Local share payloads contain the full audit package as encoded text. They are not encrypted or cloud-hosted.</p>
       <pre className="memo-box">{review.memo.markdown + profileMemoAddendum(weightedSummary)}</pre>
     </section>
   );

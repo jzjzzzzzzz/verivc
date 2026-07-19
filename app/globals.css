@@ -213,6 +213,31 @@ blockquote { margin: 0; padding: 12px; border-left: 3px solid var(--blue); backg
   color: var(--muted);
 }
 
+.share-import-form {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(18, 128, 92, 0.16);
+}
+
+.share-import-form textarea {
+  min-height: 82px;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 0.86rem;
+}
+
+.share-import-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.share-import-actions small {
+  color: var(--muted);
+}
+
 .import-button {
   display: inline-flex;
   align-items: center;
