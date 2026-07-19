@@ -20,6 +20,8 @@ test("printable memo HTML includes recommendation, evidence, profile, and print 
   assert.match(html, /proceed_with_conditions/);
   assert.match(html, /Claim-evidence appendix/);
   assert.match(html, /Evidence appendix/);
+  assert.match(html, /Memo Evidence Coverage/);
+  assert.match(html, /Traction Assessment/);
   assert.match(html, /@media print/);
   assert.match(html, /B2B SaaS accelerator weighted score/);
   assert.equal(printableMemoFileName(review), "grainloop-verivc-printable-memo.html");

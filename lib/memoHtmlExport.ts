@@ -1,6 +1,7 @@
 import type { ReviewResult } from "./types";
 import type { WeightedRecommendationSummary } from "./scoringProfiles";
 import { slugify } from "./engine";
+import { buildMemoCoverageSummary } from "./memoCoverage";
 
 export function escapeHtml(value: string): string {
   return value
@@ -69,6 +70,13 @@ function statusClass(status: string): string {
   return "neutral";
 }
 
+function coverageClass(status: string): string {
+  if (status === "strong_evidence") return "good";
+  if (status === "mixed_evidence") return "info";
+  if (status === "weak_evidence") return "warn";
+  return "neutral";
+}
+
 export function printableMemoFileName(review: ReviewResult): string {
   return `${slugify(review.profile.company_name)}-verivc-printable-memo.html`;
 }
@@ -79,6 +87,7 @@ export function buildPrintableMemoHtml(review: ReviewResult, weightedSummary: We
   const topClaims = review.claims.slice(0, 18);
   const evidence = review.evidence.slice(0, 18);
   const reviewerOverrideCount = review.claims.reduce((count, claim) => count + (claim.reviewer_overrides?.length ?? 0), 0);
+  const memoCoverage = buildMemoCoverageSummary(review);
 
   return `<!doctype html>
 <html lang="en">
@@ -112,6 +121,11 @@ export function buildPrintableMemoHtml(review: ReviewResult, weightedSummary: We
   ul { padding-left: 20px; }
   .memo-body { background: #fff; }
   .limitations { background: #fff8eb; border-top: 1px solid #f2d8ad; border-bottom: 1px solid #f2d8ad; }
+  .coverage-summary { background: #f8faff; border-top: 1px solid #dfe7ff; border-bottom: 1px solid #dfe7ff; }
+  .coverage-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
+  .coverage-card { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: white; }
+  .coverage-card strong { display: block; margin-bottom: 4px; }
+  .coverage-card small { color: var(--muted); display: block; margin-top: 6px; }
   footer { padding: 20px 40px 34px; color: var(--muted); font-size: 12px; }
   @media print {
     body { background: white; }
@@ -120,7 +134,7 @@ export function buildPrintableMemoHtml(review: ReviewResult, weightedSummary: We
     section { break-inside: avoid; }
     a { color: inherit; text-decoration: none; }
   }
-  @media (max-width: 760px) { main { width: 100%; margin: 0; border-radius: 0; } .summary-grid { grid-template-columns: 1fr 1fr; } section, header, footer { padding-left: 20px; padding-right: 20px; } }
+  @media (max-width: 760px) { main { width: 100%; margin: 0; border-radius: 0; } .summary-grid, .coverage-grid { grid-template-columns: 1fr 1fr; } section, header, footer { padding-left: 20px; padding-right: 20px; } }
 </style>
 </head>
 <body>
@@ -140,6 +154,17 @@ export function buildPrintableMemoHtml(review: ReviewResult, weightedSummary: We
     <h2>Human-review boundary</h2>
     <p>Generated ${escapeHtml(generatedAt)}. This memo is decision support for human diligence. It does not authorize, transfer, wire, or commit capital. Factual conclusions should be checked against cited evidence IDs and primary documents.</p>
     <ul>${rows(review.recommendation.reasons)}${reviewerOverrideCount ? `<li>${reviewerOverrideCount} reviewer override(s) are preserved in the claim audit trail.</li>` : ""}</ul>
+  </section>
+  <section class="coverage-summary">
+    <h2>Memo Evidence Coverage</h2>
+    <p>${escapeHtml(memoCoverage.summary)}</p>
+    <div class="summary-grid">
+      <div class="metric"><span>Average coverage</span><strong>${memoCoverage.average_coverage_score}/100</strong></div>
+      <div class="metric"><span>Strong sections</span><strong>${memoCoverage.strong_sections}</strong></div>
+      <div class="metric"><span>Weak sections</span><strong>${memoCoverage.weak_sections}</strong></div>
+      <div class="metric"><span>Inference-only</span><strong>${memoCoverage.inference_only_sections}</strong></div>
+    </div>
+    <div class="coverage-grid">${memoCoverage.sections.map((section) => `<div class="coverage-card"><strong>${escapeHtml(section.title)}</strong><span class="badge ${coverageClass(section.status)}">${escapeHtml(section.status)}</span><small>${section.coverage_score}/100 · ${escapeHtml(section.confidence)} confidence</small><small>Claims: ${escapeHtml(section.related_claim_ids.join(", ") || "none")}</small><small>Evidence: ${escapeHtml(section.evidence_ids.join(", ") || "none")}</small></div>`).join("")}</div>
   </section>
   <section class="memo-body">${memoHtml}</section>
   <section>
