@@ -73,7 +73,7 @@ function claimReviewerEvents(claims: Claim[]): AuditTimelineEvent[] {
 }
 
 function evidenceCaptureEvents(evidence: Evidence[]): AuditTimelineEvent[] {
-  return evidence.slice(0, 12).map((item, index) => ({
+  return evidence.slice(0, 12).map((item) => ({
     event_id: `audit-evidence-${item.evidence_id}`,
     event_type: "analysis" as const,
     severity: item.contradicts_claim_ids.length ? "risk_relevant" as const : "info" as const,
