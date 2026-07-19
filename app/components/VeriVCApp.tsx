@@ -9,6 +9,7 @@ import { extractPdfTextFromFile } from "@/lib/pdfExtraction";
 import { fetchGithubSnapshotFromUrl, formatGithubSnapshot } from "@/lib/githubAnalysis";
 import { applyClaimReviewerOverride } from "@/lib/reviewerOverrides";
 import { buildPrintableMemoHtml, printableMemoFileName } from "@/lib/memoHtmlExport";
+import { compareReviews } from "@/lib/reviewComparison";
 import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -116,7 +117,7 @@ function parseStoredReviews(): ReviewResult[] {
   }
 }
 
-function Dashboard({ onDemo, onNew, recent, onOpenReview, onClearReviews, onImportReview }: { onDemo: (index: number) => void; onNew: () => void; recent: ReviewResult[]; onOpenReview: (review: ReviewResult) => void; onClearReviews: () => void; onImportReview: (review: ReviewResult) => void }) {
+function Dashboard({ onDemo, onNew, onCompareDemos, recent, onOpenReview, onClearReviews, onImportReview }: { onDemo: (index: number) => void; onNew: () => void; onCompareDemos: () => void; recent: ReviewResult[]; onOpenReview: (review: ReviewResult) => void; onClearReviews: () => void; onImportReview: (review: ReviewResult) => void }) {
   return (
     <section className="hero-grid" aria-labelledby="hero-title">
       <div className="hero-card">
@@ -126,6 +127,7 @@ function Dashboard({ onDemo, onNew, recent, onOpenReview, onClearReviews, onImpo
         <div className="hero-actions">
           <button className="primary-button" onClick={onNew}>New Review</button>
           <a className="secondary-button" href="#demo-companies">Load deterministic demos</a>
+          <button className="secondary-button" onClick={onCompareDemos}>Compare demos</button>
         </div>
         <div className="trust-strip" aria-label="Product principles">
           <span>Evidence before opinion</span>
@@ -525,6 +527,45 @@ function ScoringProfilePanel({
   );
 }
 
+function ComparisonWorkspace({ reviews, onBack, onOpenReview }: { reviews: [ReviewResult, ReviewResult]; onBack: () => void; onOpenReview: (review: ReviewResult) => void }) {
+  const comparison = useMemo(() => compareReviews(reviews[0], reviews[1]), [reviews]);
+  const companies = [comparison.left, comparison.right];
+  return (
+    <section className="workspace comparison-workspace" aria-labelledby="comparison-title">
+      <div className="workspace-top">
+        <div><div className="eyebrow">Demo comparison</div><h2 id="comparison-title">Evidence beats polish</h2><p>{comparison.demo_takeaway}</p></div>
+        <div className="workspace-actions"><button className="ghost-button" onClick={onBack}>Dashboard</button>{reviews.map((review) => <button key={review.review_id} className="secondary-button" onClick={() => onOpenReview(review)}>Open {review.profile.company_name}</button>)}</div>
+      </div>
+      <section className="comparison-hero">
+        <div><span>Stronger evidence case</span><strong>{comparison.stronger_evidence_company}</strong><p>VeriVC compares traceability, contradictions, red flags, and evidence completeness rather than pitch polish.</p></div>
+      </section>
+      <div className="comparison-grid">
+        {companies.map((company, index) => (
+          <article className="comparison-card" key={company.company_name}>
+            <span className="demo-label">Demo {index + 1}</span>
+            <h3>{company.company_name}</h3>
+            <Badge tone={recommendationTone(company.recommendation)}>{recommendationLabels[company.recommendation] ?? company.recommendation}</Badge>
+            <div className="comparison-metrics">
+              <div><span>Readiness</span><strong>{company.readiness_score}</strong></div>
+              <div><span>Evidence</span><strong>{company.evidence_count}</strong></div>
+              <div><span>Contradictions</span><strong className={company.contradicted_claims ? "score-low" : "score-good"}>{company.contradicted_claims}</strong></div>
+              <div><span>Severe flags</span><strong className={company.high_or_critical_red_flags ? "score-low" : "score-good"}>{company.high_or_critical_red_flags}</strong></div>
+            </div>
+            <h4>Strongest dimensions</h4>
+            <ul>{company.strongest_dimensions.map((item) => <li key={item.dimension}>{item.dimension.replaceAll("_", " ")} · {item.score}</li>)}</ul>
+            <h4>Weakest dimensions</h4>
+            <ul>{company.weakest_dimensions.map((item) => <li key={item.dimension}>{item.dimension.replaceAll("_", " ")} · {item.score}</li>)}</ul>
+          </article>
+        ))}
+      </div>
+      <section className="workspace-section">
+        <div className="section-heading"><span>Head-to-head diligence signals</span><small>Visible comparison rules, no fake precision</small></div>
+        <div className="comparison-table-wrap"><table className="comparison-table"><thead><tr><th>Signal</th><th>{comparison.left.company_name}</th><th>{comparison.right.company_name}</th><th>Interpretation</th></tr></thead><tbody>{comparison.rows.map((row) => <tr key={row.label}><td>{row.label}</td><td className={row.stronger === "left" ? "winner-cell" : ""}>{row.left}</td><td className={row.stronger === "right" ? "winner-cell" : ""}>{row.right}</td><td>{row.interpretation}</td></tr>)}</tbody></table></div>
+      </section>
+    </section>
+  );
+}
+
 function Overview({ review }: { review: ReviewResult }) {
   return (
     <div className="overview-grid">
@@ -540,8 +581,9 @@ function Overview({ review }: { review: ReviewResult }) {
 export default function VeriVCApp() {
   const [recent, setRecent] = useState<ReviewResult[]>(() => parseStoredReviews());
   const [review, setReview] = useState<ReviewResult | undefined>(() => parseStoredReviews()[0]);
-  const [mode, setMode] = useState<"dashboard" | "intake" | "review">(() => (parseStoredReviews()[0] ? "review" : "dashboard"));
+  const [mode, setMode] = useState<"dashboard" | "intake" | "review" | "compare">(() => (parseStoredReviews()[0] ? "review" : "dashboard"));
   const [draft, setDraft] = useState<StartupInput | undefined>();
+  const [comparisonReviews, setComparisonReviews] = useState<[ReviewResult, ReviewResult] | undefined>();
 
   useEffect(() => {
     window.localStorage.setItem(storageKey, JSON.stringify(recent.slice(0, 12)));
@@ -558,6 +600,13 @@ export default function VeriVCApp() {
     saveReview(result);
   };
 
+  const compareDemoReviews = () => {
+    const demoReviews = demoCompanies.map((demo) => runReview(demo.input, demo.evidence)) as [ReviewResult, ReviewResult];
+    setComparisonReviews(demoReviews);
+    setRecent((items) => [...demoReviews, ...items.filter((item) => !demoReviews.some((demo) => demo.review_id === item.review_id))].slice(0, 12));
+    setMode("compare");
+  };
+
   const addEvidenceToCurrentReview = (evidence: Evidence) => {
     if (!review) return;
     saveReview(runReviewWithEvidencePacket(review.input, [...review.evidence, evidence]));
@@ -571,9 +620,10 @@ export default function VeriVCApp() {
   return (
     <main className="app-shell">
       <header className="topbar"><button className="brand" onClick={() => setMode("dashboard")} aria-label="Go to VeriVC dashboard"><span>V</span><strong>VeriVC</strong></button><div className="topbar-note">Evidence-driven AI startup due-diligence copilot</div></header>
-      {mode === "dashboard" ? <Dashboard recent={recent} onOpenReview={(item) => { setReview(item); setMode("review"); }} onClearReviews={() => { setRecent([]); setReview(undefined); }} onImportReview={(item) => saveReview(item)} onNew={() => { setDraft(undefined); setMode("intake"); }} onDemo={(index) => { const demo = demoCompanies[index]; setDraft(demo.input); run(demo.input, demo.evidence); }} /> : null}
+      {mode === "dashboard" ? <Dashboard recent={recent} onOpenReview={(item) => { setReview(item); setMode("review"); }} onClearReviews={() => { setRecent([]); setReview(undefined); }} onImportReview={(item) => saveReview(item)} onNew={() => { setDraft(undefined); setMode("intake"); }} onCompareDemos={compareDemoReviews} onDemo={(index) => { const demo = demoCompanies[index]; setDraft(demo.input); run(demo.input, demo.evidence); }} /> : null}
       {mode === "intake" ? <IntakeForm initialInput={draft} onCancel={() => setMode("dashboard")} onRun={(input) => run(input)} /> : null}
       {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onOverrideClaim={overrideClaimInCurrentReview} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
+      {mode === "compare" && comparisonReviews ? <ComparisonWorkspace reviews={comparisonReviews} onBack={() => setMode("dashboard")} onOpenReview={(item) => { setReview(item); setMode("review"); }} /> : null}
     </main>
   );
 }
