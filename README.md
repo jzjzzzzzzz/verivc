@@ -15,6 +15,7 @@ VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for 
 - Produces Markdown and print-ready HTML investment memos with evidence IDs, limitations, conditions, reviewer override log, and a restrained human-review recommendation.
 - Runs fully in deterministic demo mode without paid APIs; optional GitHub analysis uses only unauthenticated public GitHub API calls with timeouts.
 - Compares deterministic demo reviews side-by-side to show why evidence quality beats pitch polish.
+- Supports local review handoff by copying a `verivc-share:v1:` payload that another reviewer can paste into the dashboard import panel without a cloud account.
 
 ## Why it is different
 
@@ -85,6 +86,7 @@ npm run test:rendered  # build + server-render smoke test
 - `lib/reviewerOverrides.ts` — reviewer claim override validation, memo addendum generation, and audit-trail preservation.
 - `lib/memoHtmlExport.ts` — standalone printable HTML memo generation with safe escaping, print CSS, and claim/evidence appendices.
 - `lib/reviewComparison.ts` — side-by-side review comparison logic for readiness, contradictions, red flags, evidence completeness, traction, and technical credibility.
+- `lib/sharePackage.ts` — offline `verivc-share:v1:` payload encoding and decoding around the validated audit package schema.
 - `app/components/VeriVCApp.tsx` — local review workflow, dashboard, intake, claim-evidence explorer, evidence vault, scorecards, questions, and memo export.
 
 ## Privacy and safety notes
@@ -95,6 +97,7 @@ npm run test:rendered  # build + server-render smoke test
 - Evidence gaps are shown explicitly and reduce confidence.
 - Local demo reviews are stored only in browser session state.
 - Do not paste sensitive founder or investor data into a demo environment unless you intend to process it locally.
+- Local share payloads are not encrypted, signed, or hosted. Treat them like the full audit JSON package and move them only through a secure channel if real diligence data is included.
 
 ## Known limitations
 
@@ -129,6 +132,7 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Audit package import:** choose a previously exported VeriVC JSON package from the dashboard and reopen the full review graph.
 - **Import validation:** imported files must match the `verivc.review.v1` schema and pass review-result validation before entering the review library.
 - **Round-trip workflow:** reviewers can export an audit package, share it locally, import it later, add evidence, and rerun the analysis.
+- **Copy/paste review handoff:** the Memo tab can copy a `verivc-share:v1:` payload; the dashboard can paste and import it with the same schema validation as JSON packages.
 
 ## Added in the fourth iteration
 
@@ -165,3 +169,9 @@ This MVP focuses on the critical workflow: intake → structured profile → cla
 - **Side-by-side demo comparison:** dashboard now has **Compare demos** to contrast Aurelia AI and GrainLoop.
 - **Evidence beats polish view:** comparison highlights readiness, contradictions, severe red flags, supported claims, traction evidence, technical credibility, and evidence completeness.
 - **Presentation-ready takeaway:** the comparison explicitly shows that VeriVC favors the less flashy but better-supported company.
+
+## Added in the tenth iteration
+
+- **Local share payload:** the Memo tab can copy a `verivc-share:v1:` text payload containing the validated audit package.
+- **Paste-to-import handoff:** the dashboard can import pasted share payloads with prefix, size, UTF-8, JSON, schema, and review-shape validation.
+- **No cloud dependency:** share payloads are local convenience artifacts, not encrypted collaboration links or investment authorization records.

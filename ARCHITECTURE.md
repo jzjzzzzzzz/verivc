@@ -142,6 +142,11 @@ The UI can export a JSON audit package with schema version, export timestamp, an
 
 This keeps fund-thesis customization explainable while preserving the evidence-first review graph.
 
+
+## Tenth-iteration local share payload handoff
+
+`lib/sharePackage.ts` wraps the existing audit package JSON in a `verivc-share:v1:` base64url text payload. The Memo tab copies this payload to the clipboard; the dashboard import panel decodes it, checks the prefix and size guard, validates UTF-8 JSON, then reuses `parseAuditPackageJson` so share imports follow the same schema/version/review-shape checks as file imports. The payload is deliberately local-only and convenience-oriented: it is not encrypted, signed, cloud-hosted, or an authorization artifact.
+
 ## Fifth-iteration PDF extraction
 
 PDF extraction is intentionally client-side and local for hackathon reliability. The UI disables the file control while extraction is running, reports processed pages and character count, writes extracted text into the editable deck text field, and keeps manual pasted excerpts as a fallback. The extraction layer does not execute embedded PDF content and does not claim OCR coverage for scanned/image-only decks.

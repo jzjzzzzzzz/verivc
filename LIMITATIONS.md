@@ -17,6 +17,7 @@
 
 - Local review library uses browser `localStorage`; clearing browser data removes saved reviews.
 - Audit JSON export is not encrypted and should be handled as a sensitive diligence artifact if real data is entered.
+- Local share payloads are encoded for copy/paste convenience only; they are not encrypted, signed, access-controlled, or suitable for public sharing.
 - Reviewer-added evidence is not automatically authenticated; the reviewer must verify the source before relying on it.
 - In the second iteration deck text extraction was paste-based; later local PDF extraction still remains best-effort and editable by the reviewer.
 

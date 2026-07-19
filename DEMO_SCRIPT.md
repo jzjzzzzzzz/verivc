@@ -99,27 +99,31 @@ Then click **Export audit JSON** to show the full review package, and return to 
 4. Show that the review reopens with claims, evidence, recommendation, and memo intact.
 5. Explain that this is useful for partner review handoff and later audit replay.
 
-## 12. PDF deck extraction
+## 12. Local share payload handoff
+
+Open a review, go to **Memo**, and click **Copy share payload**. Return to the dashboard, paste the `verivc-share:v1:` text into the import panel, and click **Import share payload**. Explain that this is an offline partner-review handoff for the same validated audit package, not cloud collaboration, encryption, or authorization to invest.
+
+## 13. PDF deck extraction
 
 Click **New Review**, choose a text-based PDF pitch deck, and show the extraction status. Point out that the deck text field is filled with `Page N:` excerpts, then run the review and open a deck-sourced claim to show a source reference such as `Pitch deck page 6`. Explain that scanned decks still require pasted excerpts or primary documents.
 
-## 13. GitHub public snapshot
+## 14. GitHub public snapshot
 
 On **New Review**, enter a public GitHub repository URL and click **Analyze GitHub**. Show that VeriVC captures stars, forks, README/license status, language mix, and latest commit metadata as evidence. Then point out the limitation text: GitHub activity helps technical diligence but does not prove product quality or production readiness.
 
-## 14. Reviewer claim override
+## 15. Reviewer claim override
 
 Open a contradicted or insufficient claim. In **Reviewer override**, change the status or confidence, add a reason such as `Partner reviewed updated Stripe export; claim is partially supported pending signed customer list`, and save. Show that the override appears in the claim history, memo, and audit JSON. Explain that adding new evidence and rerunning is still the path for rule-based rescoring.
 
-## 15. Print-ready memo export
+## 16. Print-ready memo export
 
 Open **Memo** and click **Download HTML**. Explain that the file is a standalone partner-review memo with print styles, recommendation summary, fund profile, claim-evidence appendix, evidence appendix, and reviewer override log. Mention that audit JSON remains the full machine-readable record.
 
-## 16. Side-by-side demo comparison
+## 17. Side-by-side demo comparison
 
 Return to the dashboard and click **Compare demos**. Show that Aurelia AI is more polished but has more contradictions and severe red flags, while GrainLoop has stronger evidence completeness and fewer contradictions. Use the line `Evidence beats polish` to summarize the core product message.
 
-## 17. Fund profile weighting
+## 18. Fund profile weighting
 
 Open GrainLoop, then switch the **Fund scoring profile** selector between:
 

@@ -47,6 +47,7 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 
 - Exported audit packages can be imported from the dashboard.
 - Import path validates schema version and review shape before adding to the local review library.
+- Copy/paste local share payloads use the same audit package schema and validation path as JSON import.
 - Export/import enables an offline handoff loop for judges or investment partners.
 
 ## Fourth-iteration requirements completed
@@ -84,3 +85,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added side-by-side deterministic demo comparison.
 - Added comparison engine for readiness, recommendation, supported claims, contradictions, red flags, evidence completeness, traction, and technical credibility.
 - Added dashboard comparison entry point and presentation-ready takeaway.
+
+## Tenth-iteration requirements completed
+
+- Added `verivc-share:v1:` copy/paste payload generation for completed reviews.
+- Added dashboard share payload import with schema validation and clear malformed-payload errors.
+- Documented that share payloads are local convenience artifacts only; they do not encrypt, sign, host, or authorize diligence content.
