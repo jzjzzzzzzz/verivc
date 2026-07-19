@@ -375,12 +375,14 @@ function ScoreCard({ evaluation }: { evaluation: CategoryEvaluation }) {
 function ClaimExplorer({
   claims,
   evidence,
+  highlightClaimId,
   onOverrideClaim,
   onAddManualClaim,
   onEditClaim,
 }: {
   claims: Claim[];
   evidence: Evidence[];
+  highlightClaimId?: string;
   onOverrideClaim: (claimId: string, status: Claim["status"], confidence: Claim["confidence"], note: string) => void;
   onAddManualClaim: (input: AddManualClaimInput) => void;
   onEditClaim: (input: EditClaimInput) => void;
@@ -399,7 +401,7 @@ function ClaimExplorer({
       </div>
       <div className="claim-list">
         {visible.map((claim) => (
-          <details className="claim-card" key={claim.claim_id}>
+          <details id={`claim-${claim.claim_id}`} className={cls("claim-card", highlightClaimId === claim.claim_id && "jump-highlight")} key={claim.claim_id} open={highlightClaimId === claim.claim_id || undefined}>
             <summary>
               <div>
                 <span className="claim-id">{claim.claim_id} · {claim.category.replaceAll("_", " ")}</span>
@@ -540,14 +542,14 @@ function EvidenceMini({ evidence }: { evidence?: Evidence }) {
   return <div className="evidence-mini"><strong>{evidence.evidence_id}: {evidence.title}</strong><p>{evidence.excerpt}</p><small>{evidence.source_type} · reliability {evidence.reliability_level}</small></div>;
 }
 
-function EvidenceVault({ evidence, claims, onAddEvidence, onLinkEvidence }: { evidence: Evidence[]; claims: Claim[]; onAddEvidence: (evidence: Evidence) => void; onLinkEvidence: (input: ManualEvidenceLinkInput) => void }) {
+function EvidenceVault({ evidence, claims, highlightEvidenceId, onAddEvidence, onLinkEvidence }: { evidence: Evidence[]; claims: Claim[]; highlightEvidenceId?: string; onAddEvidence: (evidence: Evidence) => void; onLinkEvidence: (input: ManualEvidenceLinkInput) => void }) {
   return (
     <section className="workspace-section" aria-labelledby="evidence-title">
       <div className="section-heading"><span id="evidence-title">Evidence vault</span><small>Provenance is preserved; unavailable evidence is explicit</small></div>
       <ManualEvidenceForm onAddEvidence={onAddEvidence} nextIndex={evidence.length + 1} />
       <div className="evidence-grid">
         {evidence.map((item) => (
-          <article className="evidence-card" key={item.evidence_id}>
+          <article id={`evidence-${item.evidence_id}`} className={cls("evidence-card", highlightEvidenceId === item.evidence_id && "jump-highlight")} key={item.evidence_id}>
             <Badge tone={item.reliability_level === "primary" || item.reliability_level === "high" ? "green" : item.reliability_level === "medium" ? "blue" : "neutral"}>{item.evidence_id}</Badge>
             <h3>{item.title}</h3>
             <p>{item.excerpt}</p>
@@ -735,11 +737,22 @@ function ReviewWorkspace({
   onRefreshAnalysis: () => void;
 }) {
   const [tab, setTab] = useState<"overview" | "claims" | "evidence" | "timeline" | "memo">("overview");
+  const [jumpTarget, setJumpTarget] = useState<{ type: "claim" | "evidence"; id: string }>();
   const [profileId, setProfileId] = useState<ScoringProfileId>("balanced");
   const scoringProfile = getScoringProfile(profileId);
   const weightedSummary = summarizeWeightedRecommendation(review, scoringProfile);
   const recTone = recommendationTone(review.recommendation.state);
   const freshness = useMemo(() => assessAnalysisFreshness(review), [review]);
+  useEffect(() => {
+    if (!jumpTarget) return;
+    const targetId = jumpTarget.type === "claim" ? `claim-${jumpTarget.id}` : `evidence-${jumpTarget.id}`;
+    const handle = window.setTimeout(() => document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
+    return () => window.clearTimeout(handle);
+  }, [jumpTarget, tab]);
+  const jumpToRecord = (type: "claim" | "evidence", id: string) => {
+    setJumpTarget({ type, id });
+    setTab(type === "claim" ? "claims" : "evidence");
+  };
   return (
     <section className="workspace" aria-labelledby="workspace-title">
       <div className="workspace-top">
@@ -759,9 +772,9 @@ function ReviewWorkspace({
         ].map(([id, label]) => <button key={id} className={cls(tab === id && "tab-active")} onClick={() => setTab(id as typeof tab)}>{label}</button>)}
       </nav>
       {tab === "overview" ? <Overview review={review} /> : null}
-      {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} onOverrideClaim={onOverrideClaim} onAddManualClaim={onAddManualClaim} onEditClaim={onEditClaim} /> : null}
-      {tab === "evidence" ? <EvidenceVault evidence={review.evidence} claims={review.claims} onAddEvidence={onAddEvidence} onLinkEvidence={onLinkEvidence} /> : null}
-      {tab === "timeline" ? <AuditTimelinePanel review={review} /> : null}
+      {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} highlightClaimId={jumpTarget?.type === "claim" ? jumpTarget.id : undefined} onOverrideClaim={onOverrideClaim} onAddManualClaim={onAddManualClaim} onEditClaim={onEditClaim} /> : null}
+      {tab === "evidence" ? <EvidenceVault evidence={review.evidence} claims={review.claims} highlightEvidenceId={jumpTarget?.type === "evidence" ? jumpTarget.id : undefined} onAddEvidence={onAddEvidence} onLinkEvidence={onLinkEvidence} /> : null}
+      {tab === "timeline" ? <AuditTimelinePanel review={review} onJumpToRecord={jumpToRecord} /> : null}
       {tab === "memo" ? <MemoPanel review={review} weightedSummary={weightedSummary} /> : null}
     </section>
   );
@@ -809,7 +822,7 @@ function RefreshDiffPanel({ review }: { review: ReviewResult }) {
   );
 }
 
-function AuditTimelinePanel({ review }: { review: ReviewResult }) {
+function AuditTimelinePanel({ review, onJumpToRecord }: { review: ReviewResult; onJumpToRecord: (type: "claim" | "evidence", id: string) => void }) {
   const events = useMemo(() => buildAuditTimeline(review), [review]);
   const summary = useMemo(() => summarizeAuditTimeline(events), [events]);
   return (
@@ -840,6 +853,10 @@ function AuditTimelinePanel({ review }: { review: ReviewResult }) {
             <div className="timeline-detail">
               <p>{event.description}</p>
               <small>Claims: {event.claim_ids.join(", ") || "none"} · Evidence: {event.evidence_ids.join(", ") || "none"}</small>
+              <div className="timeline-jump-row">
+                {event.claim_ids.map((id) => <button className="jump-button" key={`claim-${event.event_id}-${id}`} onClick={() => onJumpToRecord("claim", id)}>Open {id}</button>)}
+                {event.evidence_ids.map((id) => <button className="jump-button" key={`evidence-${event.event_id}-${id}`} onClick={() => onJumpToRecord("evidence", id)}>Open {id}</button>)}
+              </div>
             </div>
           </details>
         ))}

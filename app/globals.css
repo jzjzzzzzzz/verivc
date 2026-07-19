@@ -733,3 +733,23 @@ blockquote { margin: 0; padding: 12px; border-left: 3px solid var(--blue); backg
   margin-top: 0.55rem;
 }
 .freshness-line small { color: var(--muted); }
+
+.timeline-jump-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.jump-button {
+  border: 1px solid rgba(49,87,216,.22);
+  border-radius: 999px;
+  background: rgba(49,87,216,.08);
+  color: var(--blue);
+  padding: 6px 9px;
+  font-size: .78rem;
+  font-weight: 800;
+}
+.jump-highlight {
+  outline: 3px solid rgba(49,87,216,.34);
+  box-shadow: 0 0 0 8px rgba(49,87,216,.08), var(--shadow);
+}
