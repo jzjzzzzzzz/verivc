@@ -15,6 +15,7 @@ import { buildPartnerReviewChecklist, type ChecklistStatus } from "@/lib/reviewC
 import { buildMemoCoverageSummary, type MemoCoverageStatus } from "@/lib/memoCoverage";
 import { addManualClaim, editClaimMetadata, type AddManualClaimInput, type EditClaimInput } from "@/lib/claimEditor";
 import { applyManualEvidenceLink, type ManualEvidenceLinkInput, type ManualEvidenceLinkMode, type ManualEvidenceLinkAction } from "@/lib/evidenceLinker";
+import { refreshDerivedAnalysis } from "@/lib/refreshReview";
 import { claimCategories, type CategoryEvaluation, type Claim, type Evidence, type ReviewResult, type StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
@@ -712,6 +713,7 @@ function ReviewWorkspace({
   onAddManualClaim,
   onEditClaim,
   onLinkEvidence,
+  onRefreshAnalysis,
 }: {
   review: ReviewResult;
   onBack: () => void;
@@ -721,6 +723,7 @@ function ReviewWorkspace({
   onAddManualClaim: (input: AddManualClaimInput) => void;
   onEditClaim: (input: EditClaimInput) => void;
   onLinkEvidence: (input: ManualEvidenceLinkInput) => void;
+  onRefreshAnalysis: () => void;
 }) {
   const [tab, setTab] = useState<"overview" | "claims" | "evidence" | "memo">("overview");
   const [profileId, setProfileId] = useState<ScoringProfileId>("balanced");
@@ -731,12 +734,12 @@ function ReviewWorkspace({
     <section className="workspace" aria-labelledby="workspace-title">
       <div className="workspace-top">
         <div><div className="eyebrow">Review workspace</div><h2 id="workspace-title">{review.profile.company_name}</h2><p>{review.profile.tagline}</p></div>
-        <div className="workspace-actions"><button className="ghost-button" onClick={onBack}>Dashboard</button><button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button><button className="secondary-button" onClick={onNew}>New Review</button></div>
+        <div className="workspace-actions"><button className="ghost-button" onClick={onBack}>Dashboard</button><button className="secondary-button" onClick={onRefreshAnalysis}>Refresh derived analysis</button><button className="secondary-button" onClick={() => downloadAuditPackage(review)}>Export audit JSON</button><button className="secondary-button" onClick={onNew}>New Review</button></div>
       </div>
       <div className="decision-band">
         <div className="readiness"><span>Readiness score</span><strong>{weightedSummary.weighted_readiness_score}</strong><small>/100 weighted</small></div>
         <div><Badge tone={recTone}>{recommendationLabels[review.recommendation.state]}</Badge><p>{weightedSummary.explanation} Base recommendation remains {review.recommendation.state}.</p></div>
-        <div><Badge tone={review.recommendation.confidence === "high" ? "green" : review.recommendation.confidence === "medium" ? "blue" : "amber"}>{review.recommendation.confidence} confidence</Badge><p>{review.recommendation.human_review_note}</p></div>
+        <div><Badge tone={review.recommendation.confidence === "high" ? "green" : review.recommendation.confidence === "medium" ? "blue" : "amber"}>{review.recommendation.confidence} confidence</Badge><p>{review.recommendation.human_review_note}</p><p className="refresh-note">Refresh after manual claim or evidence edits to rebuild scorecards, questions, recommendation, and memo from the current graph.</p></div>
       </div>
       <ScoringProfilePanel profileId={profileId} onProfileChange={setProfileId} summary={weightedSummary} />
       <nav className="tabs" aria-label="Review sections">
@@ -935,12 +938,17 @@ export default function VeriVCApp() {
     saveReview(applyManualEvidenceLink(review, input));
   };
 
+  const refreshCurrentReviewAnalysis = () => {
+    if (!review) return;
+    saveReview(refreshDerivedAnalysis(review));
+  };
+
   return (
     <main className="app-shell">
       <header className="topbar"><button className="brand" onClick={() => setMode("dashboard")} aria-label="Go to VeriVC dashboard"><span>V</span><strong>VeriVC</strong></button><div className="topbar-note">Evidence-driven AI startup due-diligence copilot</div></header>
       {mode === "dashboard" ? <Dashboard recent={recent} onOpenReview={(item) => { setReview(item); setMode("review"); }} onClearReviews={() => { setRecent([]); setReview(undefined); }} onImportReview={(item) => saveReview(item)} onNew={() => { setDraft(undefined); setMode("intake"); }} onCompareDemos={compareDemoReviews} onDemo={(index) => { const demo = demoCompanies[index]; setDraft(demo.input); run(demo.input, demo.evidence); }} /> : null}
       {mode === "intake" ? <IntakeForm initialInput={draft} onCancel={() => setMode("dashboard")} onRun={(input) => run(input)} /> : null}
-      {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onOverrideClaim={overrideClaimInCurrentReview} onAddManualClaim={addManualClaimToCurrentReview} onEditClaim={editClaimInCurrentReview} onLinkEvidence={linkEvidenceInCurrentReview} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
+      {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onOverrideClaim={overrideClaimInCurrentReview} onAddManualClaim={addManualClaimToCurrentReview} onEditClaim={editClaimInCurrentReview} onLinkEvidence={linkEvidenceInCurrentReview} onRefreshAnalysis={refreshCurrentReviewAnalysis} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
       {mode === "compare" && comparisonReviews ? <ComparisonWorkspace reviews={comparisonReviews} onBack={() => setMode("dashboard")} onOpenReview={(item) => { setReview(item); setMode("review"); }} /> : null}
     </main>
   );
