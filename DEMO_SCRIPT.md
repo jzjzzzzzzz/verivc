@@ -140,3 +140,7 @@ Open Aurelia AI and point to the **Partner review checklist** at the top of Over
 ## 20. Memo evidence coverage indicators
 
 Open **Memo** and show **Memo evidence coverage** above the memo body. Expand a weak or inference-only section and point out that VeriVC lists the exact claim IDs, evidence IDs, contradictions, unsupported claims, and missing information behind that memo section. Then click **Download HTML** and explain that the exported partner memo preserves the same coverage appendix.
+
+## 21. Manual claim editor
+
+Open **Claims** and expand **Add reviewer claim**. Add a legal or traction diligence claim from a reviewer note, then show the new `CL-REV-*` claim in the explorer. Next expand an existing claim and use **Edit claim metadata** to clarify wording or materiality. Point out that evidence links remain visible, the memo gains a `Reviewer Claim Edit Log`, and the audit JSON/share payload preserve the human edit trail.

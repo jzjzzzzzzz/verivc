@@ -103,3 +103,9 @@ Early-stage VC, accelerator reviewer, angel investor, or startup competition jud
 - Added memo section evidence coverage engine and tests.
 - Added Memo tab UI indicators for strong/mixed/weak/inference-only sections.
 - Added memo coverage appendix to printable HTML export.
+
+## Thirteenth-iteration requirements completed
+
+- Added manual claim editor logic and tests.
+- Added Claim Explorer UI for adding reviewer claims and editing claim metadata.
+- Added provenance and memo edit-log preservation for manual claim graph changes.

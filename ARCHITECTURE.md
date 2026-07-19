@@ -145,6 +145,11 @@ This keeps fund-thesis customization explainable while preserving the evidence-f
 
 
 
+
+## Thirteenth-iteration manual claim editor
+
+`lib/claimEditor.ts` adds reviewer-controlled claim graph editing without hiding human judgment. `addManualClaim` creates `CL-REV-*` claims from reviewer notes or data-room observations, marks them as manual evidence provenance, and defaults to insufficient evidence unless the reviewer explicitly selects another status. `editClaimMetadata` lets reviewers correct claim wording, category, materiality, or verifiability while preserving evidence links. Both paths require an explanatory note, append provenance-log entries, and maintain a `Reviewer Claim Edit Log` in the memo. Scorecards are not silently recomputed from claim edits alone; reviewers can add evidence and rerun when the evidence graph should change scoring.
+
 ## Twelfth-iteration memo evidence coverage
 
 `lib/memoCoverage.ts` derives section-level coverage indicators from the existing memo, claim graph, evidence vault, red flags, founder questions, and recommendation conditions. It does not rewrite memo text; it labels each section as `strong_evidence`, `mixed_evidence`, `weak_evidence`, or `inference_only`, with a numeric coverage score, confidence, claim IDs, evidence IDs, unsupported claims, contradictions, and missing information. The Memo tab renders these indicators before the memo body, and `lib/memoHtmlExport.ts` includes the same coverage appendix in printable HTML exports.
