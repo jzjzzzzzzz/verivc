@@ -3,6 +3,7 @@ import test from "node:test";
 import { demoCompanies } from "../lib/demoData.ts";
 import { runReview } from "../lib/engine.ts";
 import { applyClaimReviewerOverride } from "../lib/reviewerOverrides.ts";
+import { refreshDerivedAnalysis } from "../lib/refreshReview.ts";
 import { buildPrintableMemoHtml, escapeHtml, memoMarkdownToHtml, printableMemoFileName } from "../lib/memoHtmlExport.ts";
 import { getScoringProfile, summarizeWeightedRecommendation } from "../lib/scoringProfiles.ts";
 
@@ -44,4 +45,21 @@ test("printable memo HTML includes reviewer audit timeline events", () => {
   assert.match(html, /Audit timeline appendix/);
   assert.match(html, /claim_override/);
   assert.match(html, /Partner checked an updated data-room file/);
+});
+
+test("printable memo HTML includes last refresh diff when available", () => {
+  const review = runReview(demoCompanies[0].input, demoCompanies[0].evidence);
+  const target = review.claims.find((claim) => claim.status === "contradicted");
+  assert.ok(target);
+  const overridden = applyClaimReviewerOverride(review, {
+    claimId: target.claim_id,
+    status: "supported",
+    confidence: "high",
+    note: "Partner resolved one contradiction before export diff test.",
+    updatedAt: "2026-07-19T05:00:00.000Z",
+  });
+  const refreshed = refreshDerivedAnalysis(overridden, "2026-07-19T05:15:00.000Z");
+  const html = buildPrintableMemoHtml(refreshed, summarizeWeightedRecommendation(refreshed, getScoringProfile("balanced")));
+  assert.match(html, /Last refresh diff/);
+  assert.match(html, /Readiness delta/);
 });

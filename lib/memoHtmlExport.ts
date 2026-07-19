@@ -183,6 +183,17 @@ export function buildPrintableMemoHtml(review: ReviewResult, weightedSummary: We
     <p>${escapeHtml(weightedSummary.explanation)}</p>
     <table><thead><tr><th>Positive dimension</th><th>Score</th><th>Weight</th><th>Contribution</th></tr></thead><tbody>${weightedSummary.top_positive_weighted_dimensions.map((item) => `<tr><td>${escapeHtml(item.dimension.replaceAll("_", " "))}</td><td>${item.score}</td><td>${item.weight}</td><td>${item.contribution}</td></tr>`).join("")}</tbody></table>
   </section>
+  ${review.last_refresh_diff ? `<section>
+    <h2>Last refresh diff</h2>
+    <p>${escapeHtml(review.last_refresh_diff.summary)}</p>
+    <div class="summary-grid">
+      <div class="metric"><span>Recommendation</span><strong>${escapeHtml(review.last_refresh_diff.previous_recommendation)} → ${escapeHtml(review.last_refresh_diff.next_recommendation)}</strong></div>
+      <div class="metric"><span>Readiness delta</span><strong>${review.last_refresh_diff.readiness_delta >= 0 ? "+" : ""}${review.last_refresh_diff.readiness_delta}</strong></div>
+      <div class="metric"><span>Flags added</span><strong>${review.last_refresh_diff.red_flags_added.length}</strong></div>
+      <div class="metric"><span>Flags resolved</span><strong>${review.last_refresh_diff.red_flags_resolved.length}</strong></div>
+    </div>
+    <table><thead><tr><th>Dimension</th><th>Before</th><th>After</th><th>Delta</th></tr></thead><tbody>${review.last_refresh_diff.evaluation_changes.slice(0, 12).map((change) => `<tr><td>${escapeHtml(change.dimension.replaceAll("_", " "))}</td><td>${change.before_score}</td><td>${change.after_score}</td><td>${change.delta >= 0 ? "+" : ""}${change.delta}</td></tr>`).join("") || `<tr><td colspan="4">No scorecard dimensions changed.</td></tr>`}</tbody></table>
+  </section>` : ""}
   <section>
     <h2>Audit timeline appendix</h2>
     <p>${escapeHtml(auditTimelineSummary.summary)}</p>
