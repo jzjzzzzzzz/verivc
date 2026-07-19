@@ -145,6 +145,51 @@ blockquote { margin: 0; padding: 12px; border-left: 3px solid var(--blue); backg
 .evidence-card { display: grid; gap: 9px; }
 .memo-box { white-space: pre-wrap; overflow: auto; max-height: 720px; border: 1px solid var(--line); border-radius: 20px; padding: 18px; background: #111827; color: #eef2ff; font-family: var(--font-geist-mono), ui-monospace, monospace; line-height: 1.55; }
 
+.manual-claim-editor,
+.claim-metadata-editor {
+  border: 1px solid rgba(107, 72, 215, 0.22);
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(107, 72, 215, 0.07), rgba(255, 255, 255, 0.72));
+  overflow: hidden;
+}
+
+.manual-claim-editor {
+  margin-bottom: 14px;
+}
+
+.manual-claim-editor summary,
+.claim-metadata-editor summary {
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+}
+
+.manual-claim-editor summary::-webkit-details-marker,
+.claim-metadata-editor summary::-webkit-details-marker {
+  display: none;
+}
+
+.manual-claim-editor form,
+.claim-metadata-editor form {
+  display: grid;
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+
+.claim-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.claim-metadata-editor summary small {
+  color: var(--muted);
+}
+
 .memo-coverage-panel {
   display: grid;
   gap: 14px;
@@ -361,6 +406,7 @@ blockquote { margin: 0; padding: 12px; border-left: 3px solid var(--blue); backg
   .span-8, .span-4, .span-6, .span-12 { grid-column: 1 / -1; }
   .score-grid, .questions-grid, .evidence-grid, .checklist-grid, .memo-coverage-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .checklist-summary { grid-template-columns: 1fr; }
+  .claim-editor-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 680px) {

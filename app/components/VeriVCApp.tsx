@@ -13,7 +13,8 @@ import { compareReviews } from "@/lib/reviewComparison";
 import { createSharePayload, parseSharePayload, sharePayloadSummary } from "@/lib/sharePackage";
 import { buildPartnerReviewChecklist, type ChecklistStatus } from "@/lib/reviewChecklist";
 import { buildMemoCoverageSummary, type MemoCoverageStatus } from "@/lib/memoCoverage";
-import type { CategoryEvaluation, Claim, Evidence, ReviewResult, StartupInput } from "@/lib/types";
+import { addManualClaim, editClaimMetadata, type AddManualClaimInput, type EditClaimInput } from "@/lib/claimEditor";
+import { claimCategories, type CategoryEvaluation, type Claim, type Evidence, type ReviewResult, type StartupInput } from "@/lib/types";
 
 const emptyInput: StartupInput = {
   companyName: "",
@@ -360,13 +361,26 @@ function ScoreCard({ evaluation }: { evaluation: CategoryEvaluation }) {
   );
 }
 
-function ClaimExplorer({ claims, evidence, onOverrideClaim }: { claims: Claim[]; evidence: Evidence[]; onOverrideClaim: (claimId: string, status: Claim["status"], confidence: Claim["confidence"], note: string) => void }) {
+function ClaimExplorer({
+  claims,
+  evidence,
+  onOverrideClaim,
+  onAddManualClaim,
+  onEditClaim,
+}: {
+  claims: Claim[];
+  evidence: Evidence[];
+  onOverrideClaim: (claimId: string, status: Claim["status"], confidence: Claim["confidence"], note: string) => void;
+  onAddManualClaim: (input: AddManualClaimInput) => void;
+  onEditClaim: (input: EditClaimInput) => void;
+}) {
   const byId = useMemo(() => evidenceById(evidence), [evidence]);
   const [filter, setFilter] = useState("all");
   const visible = filter === "all" ? claims : claims.filter((claim) => claim.status === filter);
   return (
     <section className="workspace-section" aria-labelledby="claims-title">
       <div className="section-heading"><span id="claims-title">Claim–evidence explorer</span><small>Every conclusion remains traceable</small></div>
+      <ManualClaimForm onAddManualClaim={onAddManualClaim} />
       <div className="filter-row" role="group" aria-label="Filter claims by status">
         {['all', 'supported', 'partially_supported', 'contradicted', 'insufficient_evidence', 'unverifiable'].map((item) => (
           <button key={item} className={cls("chip", filter === item && "chip-active")} onClick={() => setFilter(item)}>{item === 'all' ? 'All' : statusLabels[item]}</button>
@@ -389,12 +403,97 @@ function ClaimExplorer({ claims, evidence, onOverrideClaim }: { claims: Claim[];
               <div><h4>Contradicting evidence</h4>{claim.contradicting_evidence_ids.length ? claim.contradicting_evidence_ids.map((id) => <EvidenceMini key={id} evidence={byId.get(id)} />) : <p className="muted">No contradiction linked.</p>}</div>
               <div className="full-span"><h4>Missing evidence</h4>{claim.missing_evidence.length ? <ul>{claim.missing_evidence.map((item) => <li key={item}>{item}</li>)}</ul> : <p className="muted">No major missing evidence for this claim.</p>}</div>
               {claim.reviewer_overrides?.length ? <div className="full-span override-history"><h4>Reviewer override history</h4>{claim.reviewer_overrides.map((override) => <p key={override.override_id}><strong>{override.updated_at}</strong>: {override.previous_status}/{override.previous_confidence} → {override.new_status}/{override.new_confidence}. {override.note}</p>)}</div> : null}
+              <ClaimMetadataEditForm claim={claim} onEditClaim={onEditClaim} />
               <ClaimOverrideForm claim={claim} onOverrideClaim={onOverrideClaim} />
             </div>
           </details>
         ))}
       </div>
     </section>
+  );
+}
+
+function ManualClaimForm({ onAddManualClaim }: { onAddManualClaim: (input: AddManualClaimInput) => void }) {
+  const [open, setOpen] = useState(false);
+  const [category, setCategory] = useState<Claim["category"]>("legal");
+  const [claimText, setClaimText] = useState("");
+  const [sourceExcerpt, setSourceExcerpt] = useState("");
+  const [materiality, setMateriality] = useState<Claim["materiality"]>("high");
+  const [verifiability, setVerifiability] = useState<Claim["verifiability"]>("needs_primary_docs");
+  const [status, setStatus] = useState<Claim["status"]>("insufficient_evidence");
+  const [confidence, setConfidence] = useState<Claim["confidence"]>("low");
+  const [note, setNote] = useState("");
+  const [message, setMessage] = useState<{ tone: "green" | "amber"; text: string }>();
+  return (
+    <details className="manual-claim-editor" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}>
+      <summary><strong>Add reviewer claim</strong><Badge tone="purple">Manual editor</Badge></summary>
+      <form onSubmit={(event) => {
+        event.preventDefault();
+        try {
+          onAddManualClaim({
+            category,
+            claim_text: claimText,
+            source_excerpt: sourceExcerpt,
+            materiality,
+            verifiability,
+            status,
+            confidence,
+            reviewer_note: note,
+          });
+          setClaimText("");
+          setSourceExcerpt("");
+          setNote("");
+          setMessage({ tone: "green", text: "Manual claim added to audit trail." });
+        } catch (error) {
+          setMessage({ tone: "amber", text: error instanceof Error ? error.message : "Unable to add manual claim." });
+        }
+      }}>
+        <div className="claim-editor-grid">
+          <label>Category<select value={category} onChange={(event) => setCategory(event.target.value as Claim["category"])}>{claimCategories.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+          <label>Materiality<select value={materiality} onChange={(event) => setMateriality(event.target.value as Claim["materiality"])}><option value="critical">critical</option><option value="high">high</option><option value="medium">medium</option><option value="low">low</option></select></label>
+          <label>Verifiability<select value={verifiability} onChange={(event) => setVerifiability(event.target.value as Claim["verifiability"])}><option value="direct">direct</option><option value="indirect">indirect</option><option value="needs_primary_docs">needs_primary_docs</option><option value="unverifiable">unverifiable</option></select></label>
+          <label>Status<select value={status} onChange={(event) => setStatus(event.target.value as Claim["status"])}>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+          <label>Confidence<select value={confidence} onChange={(event) => setConfidence(event.target.value as Claim["confidence"])}><option value="high">high</option><option value="medium">medium</option><option value="low">low</option></select></label>
+          <label className="full-span">Claim text<textarea value={claimText} onChange={(event) => setClaimText(event.target.value)} placeholder="Example: Company processes regulated customer data and needs counsel review before close." /></label>
+          <label className="full-span">Source excerpt<textarea value={sourceExcerpt} onChange={(event) => setSourceExcerpt(event.target.value)} placeholder="Paste reviewer note, founder quote, data-room excerpt, or meeting note that created this claim." /></label>
+          <label className="full-span">Reviewer note<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Why are you adding this claim, and what evidence is still required?" /></label>
+        </div>
+        <div className="form-actions"><button className="secondary-button" type="submit">Add claim to audit trail</button>{message ? <Badge tone={message.tone}>{message.text}</Badge> : null}</div>
+      </form>
+    </details>
+  );
+}
+
+function ClaimMetadataEditForm({ claim, onEditClaim }: { claim: Claim; onEditClaim: (input: EditClaimInput) => void }) {
+  const [claimText, setClaimText] = useState(claim.claim_text);
+  const [category, setCategory] = useState<Claim["category"]>(claim.category);
+  const [materiality, setMateriality] = useState<Claim["materiality"]>(claim.materiality);
+  const [verifiability, setVerifiability] = useState<Claim["verifiability"]>(claim.verifiability);
+  const [note, setNote] = useState("");
+  const [message, setMessage] = useState("");
+  return (
+    <details className="claim-metadata-editor full-span">
+      <summary><strong>Edit claim metadata</strong><small>Preserves existing evidence links and writes reviewer edit log</small></summary>
+      <form onSubmit={(event) => {
+        event.preventDefault();
+        try {
+          onEditClaim({ claim_id: claim.claim_id, claim_text: claimText, category, materiality, verifiability, reviewer_note: note });
+          setMessage("Claim metadata edit saved.");
+          setNote("");
+        } catch (error) {
+          setMessage(error instanceof Error ? error.message : "Unable to edit claim.");
+        }
+      }}>
+        <div className="claim-editor-grid">
+          <label>Category<select value={category} onChange={(event) => setCategory(event.target.value as Claim["category"])}>{claimCategories.map((item) => <option key={item} value={item}>{item}</option>)}</select></label>
+          <label>Materiality<select value={materiality} onChange={(event) => setMateriality(event.target.value as Claim["materiality"])}><option value="critical">critical</option><option value="high">high</option><option value="medium">medium</option><option value="low">low</option></select></label>
+          <label>Verifiability<select value={verifiability} onChange={(event) => setVerifiability(event.target.value as Claim["verifiability"])}><option value="direct">direct</option><option value="indirect">indirect</option><option value="needs_primary_docs">needs_primary_docs</option><option value="unverifiable">unverifiable</option></select></label>
+          <label className="full-span">Claim text<textarea value={claimText} onChange={(event) => setClaimText(event.target.value)} /></label>
+          <label className="full-span">Reviewer reason<textarea value={note} onChange={(event) => setNote(event.target.value)} placeholder="Explain why this claim wording or metadata changed." /></label>
+        </div>
+        <div className="form-actions"><button className="secondary-button" type="submit">Save claim edit</button>{message ? <Badge tone={message.startsWith("Claim") ? "green" : "amber"}>{message}</Badge> : null}</div>
+      </form>
+    </details>
   );
 }
 
@@ -569,7 +668,23 @@ function MemoCoveragePanel({ coverage }: { coverage: ReturnType<typeof buildMemo
   );
 }
 
-function ReviewWorkspace({ review, onBack, onNew, onAddEvidence, onOverrideClaim }: { review: ReviewResult; onBack: () => void; onNew: () => void; onAddEvidence: (evidence: Evidence) => void; onOverrideClaim: (claimId: string, status: Claim["status"], confidence: Claim["confidence"], note: string) => void }) {
+function ReviewWorkspace({
+  review,
+  onBack,
+  onNew,
+  onAddEvidence,
+  onOverrideClaim,
+  onAddManualClaim,
+  onEditClaim,
+}: {
+  review: ReviewResult;
+  onBack: () => void;
+  onNew: () => void;
+  onAddEvidence: (evidence: Evidence) => void;
+  onOverrideClaim: (claimId: string, status: Claim["status"], confidence: Claim["confidence"], note: string) => void;
+  onAddManualClaim: (input: AddManualClaimInput) => void;
+  onEditClaim: (input: EditClaimInput) => void;
+}) {
   const [tab, setTab] = useState<"overview" | "claims" | "evidence" | "memo">("overview");
   const [profileId, setProfileId] = useState<ScoringProfileId>("balanced");
   const scoringProfile = getScoringProfile(profileId);
@@ -593,7 +708,7 @@ function ReviewWorkspace({ review, onBack, onNew, onAddEvidence, onOverrideClaim
         ].map(([id, label]) => <button key={id} className={cls(tab === id && "tab-active")} onClick={() => setTab(id as typeof tab)}>{label}</button>)}
       </nav>
       {tab === "overview" ? <Overview review={review} /> : null}
-      {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} onOverrideClaim={onOverrideClaim} /> : null}
+      {tab === "claims" ? <ClaimExplorer claims={review.claims} evidence={review.evidence} onOverrideClaim={onOverrideClaim} onAddManualClaim={onAddManualClaim} onEditClaim={onEditClaim} /> : null}
       {tab === "evidence" ? <EvidenceVault evidence={review.evidence} onAddEvidence={onAddEvidence} /> : null}
       {tab === "memo" ? <MemoPanel review={review} weightedSummary={weightedSummary} /> : null}
     </section>
@@ -768,12 +883,22 @@ export default function VeriVCApp() {
     saveReview(applyClaimReviewerOverride(review, { claimId, status, confidence, note }));
   };
 
+  const addManualClaimToCurrentReview = (input: AddManualClaimInput) => {
+    if (!review) return;
+    saveReview(addManualClaim(review, input));
+  };
+
+  const editClaimInCurrentReview = (input: EditClaimInput) => {
+    if (!review) return;
+    saveReview(editClaimMetadata(review, input));
+  };
+
   return (
     <main className="app-shell">
       <header className="topbar"><button className="brand" onClick={() => setMode("dashboard")} aria-label="Go to VeriVC dashboard"><span>V</span><strong>VeriVC</strong></button><div className="topbar-note">Evidence-driven AI startup due-diligence copilot</div></header>
       {mode === "dashboard" ? <Dashboard recent={recent} onOpenReview={(item) => { setReview(item); setMode("review"); }} onClearReviews={() => { setRecent([]); setReview(undefined); }} onImportReview={(item) => saveReview(item)} onNew={() => { setDraft(undefined); setMode("intake"); }} onCompareDemos={compareDemoReviews} onDemo={(index) => { const demo = demoCompanies[index]; setDraft(demo.input); run(demo.input, demo.evidence); }} /> : null}
       {mode === "intake" ? <IntakeForm initialInput={draft} onCancel={() => setMode("dashboard")} onRun={(input) => run(input)} /> : null}
-      {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onOverrideClaim={overrideClaimInCurrentReview} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
+      {mode === "review" && review ? <ReviewWorkspace review={review} onAddEvidence={addEvidenceToCurrentReview} onOverrideClaim={overrideClaimInCurrentReview} onAddManualClaim={addManualClaimToCurrentReview} onEditClaim={editClaimInCurrentReview} onBack={() => setMode("dashboard")} onNew={() => { setDraft(undefined); setMode("intake"); }} /> : null}
       {mode === "compare" && comparisonReviews ? <ComparisonWorkspace reviews={comparisonReviews} onBack={() => setMode("dashboard")} onOpenReview={(item) => { setReview(item); setMode("review"); }} /> : null}
     </main>
   );
