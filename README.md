@@ -2,7 +2,19 @@
 
 **Most AI investment tools generate opinions. VeriVC verifies the evidence behind them.**
 
-VeriVC is a locally runnable, evidence-driven startup due-diligence copilot for Hack Nation 2026 Challenge 2: “The VC Brain — Deploying $100K Checks in 24 Hours.” It helps early-stage VCs, accelerator reviewers, angel investors, and startup judges review companies quickly while preserving provenance, uncertainty, and human oversight.
+> [!NOTE]
+> **Archived submission:** VeriVC was built for **Global Hack Nation — Track 2**, “The VC Brain — Deploying $100K Checks in 24 Hours.” This repository is preserved as a read-only record of the submitted product and its evidence-first diligence architecture.
+
+VeriVC is a locally runnable, evidence-driven startup due-diligence copilot developed for **Global Hack Nation — Track 2**. It helps early-stage VCs, accelerator reviewers, angel investors, and startup judges review companies quickly while preserving provenance, uncertainty, and human oversight.
+
+## Project status
+
+- **Lifecycle:** archived hackathon submission
+- **Event:** Global Hack Nation
+- **Track:** Track 2 — The VC Brain
+- **Maintenance:** no active feature development; the implementation, tests, architecture notes, and demo materials remain available for reference
+
+Archiving does not change the documented human-review boundary: VeriVC supports diligence workflows but does not make or execute investment decisions.
 
 ## What it does
 
