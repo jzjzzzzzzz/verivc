@@ -152,7 +152,7 @@ function Dashboard({ onDemo, onNew, onCompareDemos, recent, onOpenReview, onClea
   return (
     <section className="hero-grid" aria-labelledby="hero-title">
       <div className="hero-card">
-        <div className="eyebrow">Hack Nation 2026 · Challenge 2</div>
+        <div className="eyebrow">Global Hack Nation · Track 2</div>
         <h1 id="hero-title">VeriVC verifies startup claims before confidence becomes consensus.</h1>
         <p className="hero-copy">Most AI investment tools generate opinions. VeriVC verifies the evidence behind them.</p>
         <div className="hero-actions">
